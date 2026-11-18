@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Preventiva</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #111827; padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    h1, h2 { margin-bottom: 16px; color: #1f2937; }
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.2rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; }
+    
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tab-btn { padding: 10px 16px; border: none; border-radius: 8px; background: #e5e7eb; cursor: pointer; font-weight: 600; }
+    .tab-btn.active { background: #1f2937; color: #fff; }
+    
+    .secao-admin { margin-bottom: 24px; }
+    .item-admin { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px; background: #f9fafb; }
+    .item-admin input[type="text"] { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; }
+    .item-acoes { display: flex; gap: 8px; align-items: center; }
+    .item-acoes select { padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; }
+    
+    .btn-add { background: #10b981; color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 10px;}
+    .btn-edit { background: #3b82f6; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+    .btn-del { background: #ef4444; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+    .btn-back { display: inline-block; margin-bottom: 20px; color: #3b82f6; text-decoration: none; font-weight: 600; }
+    
+    .escondido { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="btn-back">← Voltar para o App</a>
+    <h1>Painel de Administração</h1>
+    <p style="margin-bottom: 20px; color: #6b7280;">Aqui você pode adicionar, editar ou remover perguntas dos seus formulários.</p>
+
+    <div class="tabs" id="tabs"></div>
+    <div id="conteudo-admin"></div>
+  </div>
+
+  <script>
+    // Pega os dados salvos ou cria o padrão (igual ao index)
+    let DADOS = JSON.parse(localStorage.getItem('formularios_customizados'));
+    
+    if (!DADOS) {
+      // Precisamos duplicar o padrão aqui caso o usuário entre direto no admin antes do index
+      DADOS = {
+        "luminotecnico": {
+          id: "luminotecnico", titulo: "Preventiva Luminotécnica", cor: "#F59E0B",
+          secoes: [{ id: "lum", titulo: "Luminotécnico", itens: [
+            { id: "l1", pergunta: "Total de lâmpadas", tipo: "numero", sem_critica: true },
+            { id: "l2", pergunta: "Total de lâmpadas queimadas", tipo: "numero" },
+            { id: "l3", pergunta: "Total de lâmpadas com defeito", tipo: "numero" },
+            { id: "l4", pergunta: "Total de luminárias de emergência", tipo: "numero", sem_critica: true },
+            { id: "l5", pergunta: "Total de luminárias de emergência queimadas", tipo: "numero" },
+            { id: "l6", pergunta: "Total de luminárias de emergência com defeito", tipo: "numero" },
+            { id: "l7", pergunta: "Foi adotada alguma contramedida?", tipo: "sim_nao", sem_critica: true }
+          ]}]
+        },
+        "inspecao_visual": {
+          id: "inspecao_visual", titulo: "Preventiva — Inspeção Visual", cor: "#3B82F6",
+          secoes: [
+            { id: "iv1", titulo: "Interfones", itens: [
+              { id: "i1", pergunta: "Estão operando os 4?", tipo: "sim_nao" },
+              { id: "i2", pergunta: "Estão danificados?", tipo: "sim_nao" },
+              { id: "i3", pergunta: "Estão sujos?", tipo: "sim_nao" }
+            ]},
+            { id: "iv2", titulo: "Botoeiras", itens: [
+              { id: "i4", pergunta: "Estão operacionais?", tipo: "sim_nao" },
+              { id: "i5", pergunta: "Estão danificadas?", tipo: "sim_nao" },
+              { id: "i6", pergunta: "Estão sujas?", tipo: "sim_nao" }
+            ]},
+            { id: "iv3", titulo: "PMVs", itens: [
+              { id: "i7", pergunta: "Estão operando em normalidade?", tipo: "sim_nao" },
+              { id: "i8", pergunta: "Estão danificados?", tipo: "sim_nao" },
+              { id: "i9", pergunta: "Estão sujos?", tipo: "sim_nao" }
+            ]},
+            { id: "iv4", titulo: "Eletroímã", itens: [
+              { id: "i10", pergunta: "Está operando em normalidade?", tipo: "sim_nao" },
+              { id: "i11", pergunta: "Está em funcionamento com status no HUB?", tipo: "sim_nao" }
+            ]},
+            { id: "iv5", titulo: "Alarme de incêndio", itens: [
+              { id: "i12", pergunta: "Está operando?", tipo: "sim_nao" },
+              { id: "i13", pergunta: "Está apresentando algum alerta no visor?", tipo: "sim_nao" }
+            ]}
+          ]
+        },
+        "lubrificacao_reapertos": {
+          id: "lubrificacao_reapertos", titulo: "Preventiva — Lubrificação e Reapertos", cor: "#10B981",
+          secoes: [
+            { id: "lr1", titulo: "Inspeção", itens: [
+              { id: "r1", pergunta: "Porta de acesso — visualmente OK?", tipo: "sim_nao" },
+              { id: "r2", pergunta: "Porta de acesso — abre/fecha via manual?", tipo: "sim_nao" },
+              { id: "r3", pergunta: "Porta de acesso — abre/fecha via remoto?", tipo: "sim_nao" },
+              { id: "r4", pergunta: "Porta de acesso — sinais de vandalismo?", tipo: "sim_nao" },
+              { id: "r5", pergunta: "Portas de embarque — abre/fecha via remoto?", tipo: "sim_nao" },
+              { id: "r6", pergunta: "Portas de embarque — abre/fecha sem alimentação?", tipo: "sim_nao" },
+              { id: "r7", pergunta: "Porta de emergência — sinais de vandalismo?", tipo: "sim_nao" },
+              { id: "r8", pergunta: "Porta de emergência — operando normalmente?", tipo: "sim_nao" },
+              { id: "r9", pergunta: "Catracas — PCD abre via comando?", tipo: "sim_nao" },
+              { id: "r10", pergunta: "Catracas — sinais de vandalismo?", tipo: "sim_nao" },
+              { id: "r11", pergunta: "Catracas — entrada/saída normal?", tipo: "sim_nao" }
+            ]},
+            { id: "lr2", titulo: "Limpeza Técnica", itens: [
+              { id: "r12", pergunta: "Porta principal — limpeza dos trilhos?", tipo: "sim_nao" },
+              { id: "r13", pergunta: "Porta principal — lubrificação dos trilhos?", tipo: "sim_nao" },
+              { id: "r14", pergunta: "Porta de embarque — supressão de resíduos?", tipo: "sim_nao" },
+              { id: "r15", pergunta: "Catracas — limpeza da graxa velha?", tipo: "sim_nao" },
+              { id: "r16", pergunta: "Catracas — nova lubrificação?", tipo: "sim_nao" }
+            ]},
+            { id: "lr3", titulo: "Reapertos", itens: [
+              { id: "r17", pergunta: "Catracas — boa fixação?", tipo: "sim_nao" },
+              { id: "r18", pergunta: "Catracas — necessário reaperto?", tipo: "sim_nao" },
+              { id: "r19", pergunta: "Totem — boa fixação?", tipo: "sim_nao" },
+              { id: "r20", pergunta: "Totem — necessário reaperto?", tipo: "sim_nao" }
+            ]}
+          ]
+        }
+      };
+      localStorage.setItem('formularios_customizados', JSON.stringify(DADOS));
+    }
+
+    let tipoAtual = "luminotecnico";
+
+    function renderTabs() {
+      const tabs = document.getElementById('tabs');
+      tabs.innerHTML = '';
+      Object.keys(DADOS).forEach(key => {
+        const btn = document.createElement('button');
+        btn.className = `tab-btn ${key === tipoAtual ? 'active' : ''}`;
+        btn.textContent = DADOS[key].titulo.replace('Preventiva — ', '').replace('Preventiva ', '');
+        btn.onclick = () => { tipoAtual = key; renderTabs(); renderConteudo(); };
+        tabs.appendChild(btn);
+      });
+    }
+
+    function renderConteudo() {
+      const container = document.getElementById('conteudo-admin');
+      container.innerHTML = '';
+      const form = DADOS[tipoAtual];
+
+      form.secoes.forEach((secao, secIndex) => {
+        const divSecao = document.createElement('div');
+        divSecao.className = 'card secao-admin';
+        divSecao.innerHTML = `<h2>${secao.titulo}</h2>`;
+
+        secao.itens.forEach((item, itemIndex) => {
+          const divItem = document.createElement('div');
+          divItem.className = 'item-admin';
+          divItem.innerHTML = `
+            <input type="text" value="${item.pergunta}" onchange="editarPergunta('${item.id}', this.value)">
+            <div class="item-acoes">
+              <select onchange="mudarTipo('${item.id}', this.value)">
+                <option value="sim_nao" ${item.tipo === 'sim_nao' ? 'selected' : ''}>Sim/Não</option>
+                <option value="numero" ${item.tipo === 'numero' ? 'selected' : ''}>Número (Quantitativo)</option>
+              </select>
+              <label style="font-size:0.85rem; display:flex; align-items:center; gap:4px;">
+                <input type="checkbox" ${item.sem_critica ? 'checked' : ''} onchange="mudarCritica('${item.id}', this.checked)"> Sem criticidade
+              </label>
+              <button class="btn-del" onclick="removerPergunta('${item.id}')">Apagar</button>
+            </div>
+          `;
+          divSecao.appendChild(divItem);
+        });
+
+        const btnAdd = document.createElement('button');
+        btnAdd.className = 'btn-add';
+        btnAdd.textContent = '+ Adicionar Nova Pergunta';
+        btnAdd.onclick = () => adicionarPergunta(secao.id);
+        divSecao.appendChild(btnAdd);
+
+        container.appendChild(divSecao);
+      });
+
+      // Botão de resetar
+      const btnReset = document.createElement('button');
+      btnReset.className = 'btn-del';
+      btnReset.style.width = '100%';
+      btnReset.style.marginTop = '20px';
+      btnReset.textContent = 'Restaurar Formulários para o Padrão de Fábrica';
+      btnReset.onclick = resetarPadrao;
+      container.appendChild(btnReset);
+    }
+
+    function salvarEAtualizar() {
+      localStorage.setItem('formularios_customizados', JSON.stringify(DADOS));
+      renderConteudo();
+    }
+
+    function acharItem(id) {
+      const form = DADOS[tipoAtual];
+      for (let s of form.secoes) {
+        for (let i of s.itens) {
+          if (i.id === id) return { secao: s, item: i };
+        }
+      }
+      return null;
+    }
+
+    function editarPergunta(id, novoTexto) {
+      const res = acharItem(id);
+      if (res) { res.item.pergunta = novoTexto; salvarEAtualizar(); }
+    }
+
+    function mudarTipo(id, novoTipo) {
+      const res = acharItem(id);
+      if (res) { res.item.tipo = novoTipo; salvarEAtualizar(); }
+    }
+
+    function mudarCritica(id, semCritica) {
+      const res = acharItem(id);
+      if (res) { res.item.sem_critica = semCritica; salvarEAtualizar(); }
+    }
+
+    function removerPergunta(id) {
+      if (!confirm("Certeza que deseja apagar esta pergunta?")) return;
+      const form = DADOS[tipoAtual];
+      form.secoes.forEach(s => {
+        s.itens = s.itens.filter(i => i.id !== id);
+      });
+      salvarEAtualizar();
+    }
+
+    function adicionarPergunta(secaoId) {
+      const form = DADOS[tipoAtual];
+      const secao = form.secoes.find(s => s.id === secaoId);
+      if (!secao) return;
+      
+      const texto = prompt("Digite a nova pergunta:");
+      if (!texto) return;
+
+      const newId = 'novo_' + Date.now();
+      secao.itens.push({
+        id: newId,
+        pergunta: texto,
+        tipo: 'sim_nao',
+        sem_critica: false
+      });
+      salvarEAtualizar();
+    }
+
+    function resetarPadrao() {
+      if (confirm("Isso apagará todas as suas edições e voltará ao padrão original. Tem certeza?")) {
+        localStorage.removeItem('formularios_customizados');
+        window.location.reload();
+      }
+    }
+
+    // --- INICIALIZAÇÃO ---
+    const senha = prompt("Digite a senha de administrador:");
+    if (senha !== "577900") {
+      document.body.innerHTML = "<h1 style='text-align:center; margin-top:50px; color:#ef4444;'>Acesso Negado</h1><p style='text-align:center;'><a href='index.html'>Voltar ao aplicativo</a></p>";
+    } else {
+      renderTabs();
+      renderConteudo();
+    }
+  </script>
+</body>
+</html>
