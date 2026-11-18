@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manutenção Preventiva</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1f2937">
+  <link rel="icon" type="image/png" href="icone.png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,8 +25,12 @@
     .footer-link { color: #6b7280; text-decoration: none; font-size: 0.9rem; }
 
     /* Formulário */
-    .form-header { padding: 16px; text-align: center; color: #fff; background: #1f2937; position: sticky; top: 0; z-index: 10; }
-    .badge-tipo { display: inline-block; padding: 10px 20px; border-radius: 999px; color: #fff; font-weight: 700; font-size: 1rem; }
+    .form-header { padding: 16px; text-align: center; color: #fff; background: #1f2937; position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; }
+    .btn-voltar-topo { background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 1.2rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .btn-voltar-topo:active { background: rgba(255,255,255,0.4); }
+    .badge-tipo { display: inline-block; padding: 10px 20px; border-radius: 999px; color: #fff; font-weight: 700; font-size: 0.95rem; text-align: center; flex: 1; margin: 0 10px; }
+    .espaco-vazio { width: 40px; } /* Para centralizar o badge */
+
     .form-main { max-width: 700px; margin: 0 auto; padding: 16px; }
     .cabecalho, .secao { background: #fff; padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
     .cabecalho h2, .secao h3 { font-size: 1rem; margin-bottom: 12px; color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; }
@@ -90,7 +97,7 @@
       </button>
       <button class="card" onclick="iniciarFormulario('inspecao_visual')" style="--cor:#3B82F6">
         <span class="card-badge">Inspeção Visual</span>
-        <span class="card-desc">Interfones, botoeiras, PMVs, eletroímã, alarme</span>
+        <span class="card-desc">Interfones, botoeiras, PMVs, eletroímã, alarme, rack</span>
       </button>
       <button class="card" onclick="iniciarFormulario('lubrificacao_reapertos')" style="--cor:#10B981">
         <span class="card-badge">Lubrificação e Reapertos</span>
@@ -106,7 +113,9 @@
   <!-- TELA DO FORMULÁRIO -->
   <div id="tela-formulario" class="escondido">
     <header class="form-header">
+      <button class="btn-voltar-topo" onclick="voltarInicio()" title="Voltar">←</button>
       <div class="badge-tipo" id="badge-tipo">Carregando...</div>
+      <div class="espaco-vazio"></div>
     </header>
     <main class="form-main">
       <section class="cabecalho">
@@ -179,6 +188,14 @@
             { id: "iv5", titulo: "Alarme de incêndio", itens: [
               { id: "i12", pergunta: "Está operando?", tipo: "sim_nao" },
               { id: "i13", pergunta: "Está apresentando algum alerta no visor?", tipo: "sim_nao" }
+            ]},
+            { id: "iv6", titulo: "Rack", itens: [
+              { id: "i14", pergunta: "Possui algum equipamento desligado?", tipo: "sim_nao" },
+              { id: "i15", pergunta: "Possui algum cheiro de queimado?", tipo: "sim_nao" },
+              { id: "i16", pergunta: "Possui algum material estranho dentro do rack?", tipo: "sim_nao" },
+              { id: "i17", pergunta: "Possui algo quebrado?", tipo: "sim_nao" },
+              { id: "i18", pergunta: "Possui algo faltando?", tipo: "sim_nao" },
+              { id: "i19", pergunta: "Possui algo não identificado?", tipo: "sim_nao" }
             ]}
           ]
         },
@@ -209,7 +226,8 @@
               { id: "r17", pergunta: "Catracas — boa fixação?", tipo: "sim_nao" },
               { id: "r18", pergunta: "Catracas — necessário reaperto?", tipo: "sim_nao" },
               { id: "r19", pergunta: "Totem — boa fixação?", tipo: "sim_nao" },
-              { id: "r20", pergunta: "Totem — necessário reaperto?", tipo: "sim_nao" }
+              { id: "r20", pergunta: "Totem — necessário reaperto?", tipo: "sim_nao" },
+              { id: "r21", pergunta: "Realizado aperto no quadro elétrico?", tipo: "sim_nao" }
             ]}
           ]
         }
@@ -399,7 +417,6 @@
           const divFoto = document.createElement('div');
           divFoto.className = 'foto-area';
           
-          // Renderiza fotos já salvas no rascunho
           if (respSalva.fotos && respSalva.fotos.length > 0) {
             respSalva.fotos.forEach(fotoBase64 => {
               const prev = document.createElement('div');
@@ -496,9 +513,15 @@
       historico.unshift(relatorio);
       localStorage.setItem('historico', JSON.stringify(historico));
       
-      localStorage.removeItem('rascunho_atual'); // Limpa o rascunho após finalizar
+      localStorage.removeItem('rascunho_atual');
 
-      // Inicia geração do PDF
+      gerarPDF(relatorio);
+      
+      alert("PDF gerado e relatório salvo no histórico!");
+      window.location.reload();
+    }
+
+    function gerarPDF(rel) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'mm', 'a4');
       let y = 20;
@@ -511,25 +534,27 @@
       doc.rect(0, 0, 210, 30, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(14); doc.setFont(undefined, 'bold');
-      doc.text(relatorio.titulo, margem, 12);
+      doc.text(rel.titulo, margem, 12);
       doc.setFontSize(10); doc.setFont(undefined, 'normal');
-      doc.text(`Relatório: ${relatorio.numero}`, margem, 20);
+      doc.text(`Relatório: ${rel.numero}`, margem, 20);
 
       y = 40; doc.setTextColor(0, 0, 0); doc.setFontSize(10);
-      doc.text(`Local: ${cabecalho.local}`, margem, y); y += 6;
-      doc.text(`Técnico: ${cabecalho.tecnico}  |  Chapa: ${cabecalho.chapa}`, margem, y); y += 6;
-      doc.text(`CFT/CREA: ${cabecalho.cftCrea}  |  Data: ${cabecalho.data.split('-').reverse().join('/')}`, margem, y); y += 10;
+      doc.text(`Local: ${rel.cabecalho.local}`, margem, y); y += 6;
+      doc.text(`Técnico: ${rel.cabecalho.tecnico}  |  Chapa: ${rel.cabecalho.chapa}`, margem, y); y += 6;
+      doc.text(`CFT/CREA: ${rel.cabecalho.cftCrea}  |  Data: ${rel.cabecalho.data.split('-').reverse().join('/')}`, margem, y); y += 10;
 
-      relatorio.secoes.forEach(secao => {
+      rel.secoes.forEach(secao => {
         if (y > 260) { doc.addPage(); y = 20; }
         doc.setFillColor(243, 244, 246);
         doc.rect(margem - 3, y - 5, 210 - 2*margem + 6, 8, 'F');
         doc.setFont(undefined, 'bold'); doc.setFontSize(11);
         doc.text(secao.titulo, margem, y); y += 10;
+        
+        // Fonte normal para a pergunta
         doc.setFont(undefined, 'normal'); doc.setFontSize(9);
 
         secao.itens.forEach(item => {
-          const resp = relatorio.respostas[item.id] || {};
+          const resp = rel.respostas[item.id] || {};
           if (y > 260) { doc.addPage(); y = 20; }
 
           const xTexto = item.sem_critica ? margem : margem + 6;
@@ -540,34 +565,46 @@
             doc.circle(margem + 1, y - 1, 2, 'F');
           }
 
+          // Desenha a pergunta (normal)
+          const perguntaTexto = `${item.pergunta}   `;
+          doc.text(perguntaTexto, xTexto, y);
+          
+          // Calcula onde a resposta vai começar
+          const larguraPergunta = doc.getTextWidth(perguntaTexto);
+          let xResposta = xTexto + larguraPergunta;
+          
+          // Desenha a resposta (negrito)
+          doc.setFont(undefined, 'bold');
           const txtResp = item.tipo === 'numero' ? `R: ${resp.valor || '—'}` : `R: ${resp.resposta || '—'}`;
-          let linha = `${item.pergunta}   [${txtResp}]`;
-          if (!item.sem_critica) linha += `   ${NOMES[resp.criticidade || 'operando']}`;
+          doc.text(txtResp, xResposta, y);
+          
+          // Calcula onde a criticidade vai começar
+          const larguraResposta = doc.getTextWidth(txtResp);
+          let xCrit = xResposta + larguraResposta + 4;
 
-          const linhas = doc.splitTextToSize(linha, 210 - xTexto - margem);
-          doc.text(linhas, xTexto, y);
-          y += linhas.length * 4.5;
+          // Desenha a criticidade (normal)
+          doc.setFont(undefined, 'normal');
+          if (!item.sem_critica) {
+             doc.text(`${NOMES[resp.criticidade || 'operando']}`, xCrit, y);
+          }
+
+          y += 4.5;
 
           if (resp.observacao) {
             doc.setTextColor(100); doc.setFontSize(8);
             const obs = doc.splitTextToSize(`Obs.: ${resp.observacao}`, 210 - xTexto - margem);
             doc.text(obs, xTexto, y); y += obs.length * 4;
             doc.setTextColor(0,0,0);
+            doc.setFontSize(9);
           }
 
-          // FOTOS NO PDF
           if (resp.fotos && resp.fotos.length > 0) {
-            const imgWidth = 22; // Largura da miniatura em mm
-            const imgHeight = 22;
-            let xImg = xTexto;
-            
+            const imgWidth = 22; const imgHeight = 22; let xImg = xTexto;
             if (y > 250) { doc.addPage(); y = 20; }
             y += 2;
-
             resp.fotos.forEach((fotoBase64) => {
               if (xImg + imgWidth > 210 - margem) {
-                xImg = xTexto;
-                y += imgHeight + 4;
+                xImg = xTexto; y += imgHeight + 4;
                 if (y > 260) { doc.addPage(); y = 20; xImg = xTexto; }
               }
               doc.addImage(fotoBase64, 'JPEG', xImg, y, imgWidth, imgHeight);
@@ -605,12 +642,9 @@
       doc.text("OPERANDO = Normalidade", margem + 8, y); y += 10;
 
       doc.setFontSize(8); doc.setTextColor(120);
-      doc.text(`Gerado em ${new Date().toLocaleString('pt-BR')} — ${relatorio.numero}`, margem, 285);
+      doc.text(`Gerado em ${new Date().toLocaleString('pt-BR')} — ${rel.numero}`, margem, 285);
 
-      doc.save(`${relatorio.numero}.pdf`);
-      
-      alert("PDF gerado e relatório salvo no histórico!");
-      window.location.reload();
+      doc.save(`${rel.numero}.pdf`);
     }
 
     // --- HISTÓRICO ---
@@ -652,100 +686,14 @@
         let hist = JSON.parse(localStorage.getItem('historico') || '[]');
         hist.splice(index, 1);
         localStorage.setItem('historico', JSON.stringify(hist));
-        abrirHistorico(); // Recarrega a lista
+        abrirHistorico(); 
       }
     }
 
     function baixarPdfHistorico(index) {
       const hist = JSON.parse(localStorage.getItem('historico') || '[]');
       const rel = hist[index];
-      if (!rel) return;
-      
-      // Como a função finalizar() é complexa e monta o PDF baseado no estado atual,
-      // Para simplificar o re-download nós usamos exatamente a mesma lógica de antes, mas "injetando" os dados.
-      
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('p', 'mm', 'a4');
-      let y = 20; const margem = 15;
-      const CORES = { alta: [239, 68, 68], baixa: [245, 158, 11], operando: [59, 130, 246] };
-      const NOMES = { alta: 'ALTA', baixa: 'BAIXA', operando: 'OPERANDO' };
-
-      doc.setFillColor(31, 41, 55); doc.rect(0, 0, 210, 30, 'F');
-      doc.setTextColor(255, 255, 255); doc.setFontSize(14); doc.setFont(undefined, 'bold');
-      doc.text(rel.titulo, margem, 12);
-      doc.setFontSize(10); doc.setFont(undefined, 'normal');
-      doc.text(`Relatório: ${rel.numero}`, margem, 20);
-
-      y = 40; doc.setTextColor(0, 0, 0); doc.setFontSize(10);
-      doc.text(`Local: ${rel.cabecalho.local}`, margem, y); y += 6;
-      doc.text(`Técnico: ${rel.cabecalho.tecnico}  |  Chapa: ${rel.cabecalho.chapa}`, margem, y); y += 6;
-      doc.text(`CFT/CREA: ${rel.cabecalho.cftCrea}  |  Data: ${rel.cabecalho.data.split('-').reverse().join('/')}`, margem, y); y += 10;
-
-      rel.secoes.forEach(secao => {
-        if (y > 260) { doc.addPage(); y = 20; }
-        doc.setFillColor(243, 244, 246);
-        doc.rect(margem - 3, y - 5, 210 - 2*margem + 6, 8, 'F');
-        doc.setFont(undefined, 'bold'); doc.setFontSize(11); doc.text(secao.titulo, margem, y); y += 10;
-        doc.setFont(undefined, 'normal'); doc.setFontSize(9);
-
-        secao.itens.forEach(item => {
-          const resp = rel.respostas[item.id] || {};
-          if (y > 260) { doc.addPage(); y = 20; }
-          const xTexto = item.sem_critica ? margem : margem + 6;
-          
-          if (!item.sem_critica) {
-            doc.setFillColor(...CORES[resp.criticidade || 'operando']);
-            doc.circle(margem + 1, y - 1, 2, 'F');
-          }
-          const txtResp = item.tipo === 'numero' ? `R: ${resp.valor || '—'}` : `R: ${resp.resposta || '—'}`;
-          let linha = `${item.pergunta}   [${txtResp}]`;
-          if (!item.sem_critica) linha += `   ${NOMES[resp.criticidade || 'operando']}`;
-
-          const linhas = doc.splitTextToSize(linha, 210 - xTexto - margem);
-          doc.text(linhas, xTexto, y); y += linhas.length * 4.5;
-
-          if (resp.observacao) {
-            doc.setTextColor(100); doc.setFontSize(8);
-            const obs = doc.splitTextToSize(`Obs.: ${resp.observacao}`, 210 - xTexto - margem);
-            doc.text(obs, xTexto, y); y += obs.length * 4;
-            doc.setTextColor(0,0,0);
-          }
-
-          if (resp.fotos && resp.fotos.length > 0) {
-            const imgWidth = 22; const imgHeight = 22; let xImg = xTexto;
-            if (y > 250) { doc.addPage(); y = 20; }
-            y += 2;
-            resp.fotos.forEach((fotoBase64) => {
-              if (xImg + imgWidth > 210 - margem) {
-                xImg = xTexto; y += imgHeight + 4;
-                if (y > 260) { doc.addPage(); y = 20; xImg = xTexto; }
-              }
-              doc.addImage(fotoBase64, 'JPEG', xImg, y, imgWidth, imgHeight);
-              xImg += imgWidth + 4;
-            });
-            y += imgHeight + 6;
-          }
-          y += 3;
-        });
-        y += 4;
-      });
-
-      if (y > 260) { doc.addPage(); y = 20; }
-      doc.setDrawColor(200); doc.line(margem, y, 210 - margem, y); y += 6;
-      doc.setFontSize(9); doc.setFont(undefined, 'bold'); doc.text("LEGENDA DE CRITICIDADE:", margem, y); y += 5;
-      doc.setFontSize(8); doc.setFont(undefined, 'normal');
-      
-      doc.setFillColor(...CORES.alta); doc.circle(margem + 2, y - 1, 2, 'F');
-      doc.text("ALTA = Inoperante", margem + 8, y); y += 4.5;
-      doc.setFillColor(...CORES.baixa); doc.circle(margem + 2, y - 1, 2, 'F');
-      doc.text("BAIXA = Defeito / Sujo / Danificado", margem + 8, y); y += 4.5;
-      doc.setFillColor(...CORES.operando); doc.circle(margem + 2, y - 1, 2, 'F');
-      doc.text("OPERANDO = Normalidade", margem + 8, y); y += 10;
-
-      doc.setFontSize(8); doc.setTextColor(120);
-      doc.text(`Gerado em ${new Date(rel.geradoEm).toLocaleString('pt-BR')} — ${rel.numero}`, margem, 285);
-
-      doc.save(`${rel.numero}.pdf`);
+      if (rel) gerarPDF(rel);
     }
   </script>
 </body>
