@@ -1,841 +1,352 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manutenção Preventiva</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1f2937">
-  <link rel="icon" type="image/png" href="icone.png">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #111827; min-height: 100vh; }
-    
-    .app-header { background: #1f2937; color: #fff; padding: 24px 20px; text-align: center; }
-    .app-header h1 { font-size: 1.4rem; margin-bottom: 4px; }
-    .app-header p { font-size: 0.9rem; opacity: 0.8; }
-    .home-grid { display: grid; gap: 16px; padding: 20px; grid-template-columns: 1fr; max-width: 600px; margin: 0 auto; }
-    .card { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 20px; border: none; border-radius: 14px; background: #fff; border-left: 8px solid var(--cor); box-shadow: 0 2px 6px rgba(0,0,0,0.08); cursor: pointer; text-align: left; transition: transform 0.15s; }
-    .card:active { transform: scale(0.98); }
-    .card-badge { font-weight: 700; font-size: 1.1rem; color: var(--cor); }
-    .card-desc { font-size: 0.85rem; color: #6b7280; }
-    .app-footer { display: flex; justify-content: center; gap: 24px; padding: 20px; }
-    .footer-link { color: #6b7280; text-decoration: none; font-size: 0.9rem; }
-
-    .form-header { padding: 16px; text-align: center; color: #fff; background: #1f2937; position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; }
-    .btn-voltar-topo { background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 1.2rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .badge-tipo { display: inline-block; padding: 10px 20px; border-radius: 999px; color: #fff; font-weight: 700; font-size: 0.95rem; text-align: center; flex: 1; margin: 0 10px; }
-    .espaco-vazio { width: 40px; }
-
-    .form-main { max-width: 700px; margin: 0 auto; padding: 16px; }
-    .cabecalho, .secao { background: #fff; padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .cabecalho h2, .secao h3 { font-size: 1rem; margin-bottom: 12px; color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; }
-    .cabecalho label { display: block; font-size: 0.85rem; color: #374151; margin-bottom: 12px; }
-    .cabecalho input { width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; }
-    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    
-    .item { border-bottom: 1px solid #f3f4f6; padding: 12px 0; }
-    .item:last-child { border-bottom: none; }
-    .item-pergunta { font-weight: 600; font-size: 0.95rem; margin-bottom: 10px; color: #111827; }
-    .opcoes-resposta { display: flex; gap: 8px; margin-bottom: 10px; }
-    .opcoes-resposta button { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #d1d5db; background: #fff; font-weight: 600; cursor: pointer; }
-    .opcoes-resposta button.ativo-sim { background: #10b981; color: #fff; border-color: #10b981; }
-    .opcoes-resposta button.ativo-nao { background: #6b7280; color: #fff; border-color: #6b7280; }
-    .item input[type="number"], .item textarea { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; margin-bottom: 10px; font-family: inherit; }
-    .item textarea { min-height: 60px; resize: vertical; }
-    
-    .criticidade-label { font-size: 0.8rem; color: #6b7280; margin-bottom: 6px; }
-    .criticidades { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
-    .criticidades button { padding: 10px 4px; border-radius: 8px; border: 2px solid #e5e7eb; background: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
-    .criticidades button[data-crit="alta"].ativo { background: #ef4444; color: #fff; border-color: #ef4444; }
-    .criticidades button[data-crit="baixa"].ativo { background: #f59e0b; color: #fff; border-color: #f59e0b; }
-    .criticidades button[data-crit="operando"].ativo { background: #3b82f6; color: #fff; border-color: #3b82f6; }
-    
-    .foto-area { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-    .foto-area label { display: inline-block; padding: 8px 14px; border-radius: 8px; background: #e0e7ff; color: #3730a3; font-size: 0.85rem; cursor: pointer; }
-    .foto-area input[type="file"] { display: none; }
-    .foto-preview { position: relative; width: 64px; height: 64px; border-radius: 8px; overflow: hidden; border: 1px solid #d1d5db; }
-    .foto-preview img { width: 100%; height: 100%; object-fit: cover; }
-    .foto-preview button { position: absolute; top: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; border: none; width: 20px; height: 20px; font-size: 12px; cursor: pointer; }
-    
-    .acoes-finais { display: flex; gap: 12px; margin: 20px 0 40px; }
-    .btn-primario, .btn-secundario { flex: 1; padding: 14px; border-radius: 10px; border: none; font-size: 1rem; font-weight: 700; cursor: pointer; }
-    .btn-primario { background: #1f2937; color: #fff; }
-    .btn-secundario { background: #e5e7eb; color: #374151; }
-    .escondido { display: none !important; }
-
-    .modal-bg { position: fixed; top:0; left:0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 100; }
-    .modal-box { background: #fff; padding: 20px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; display: flex; flex-direction: column; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .modal-header h3 { font-size: 1.2rem; }
-    .search-box { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; margin-bottom: 12px; }
-    
-    .lista-historico-scroll { overflow-y: auto; flex: 1; padding-right: 4px; }
-    .hist-item { border-bottom: 1px solid #e5e7eb; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; }
-    .hist-info { font-size: 0.9rem; }
-    .hist-info strong { display: block; margin-bottom: 4px; font-size: 1rem; color: #111827; }
-    .hist-info span { color: #6b7280; font-size: 0.8rem; }
-    .hist-botoes { display: flex; gap: 8px; }
-    .hist-botoes button { padding: 6px 10px; border-radius: 6px; border: none; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
-    .btn-ver { background: #3b82f6; color: #fff; }
-    .btn-del { background: #ef4444; color: #fff; }
-    .sem-resultado { text-align:center; color:#6b7280; margin: 20px 0; }
-
-    .modelo-lampada { border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
-    .modelo-header { display: flex; align-items: center; padding: 12px; background: #f9fafb; cursor: pointer; border-bottom: 1px solid transparent; }
-    .modelo-header.ativo { background: #f0fdf4; border-bottom-color: #e5e7eb; }
-    .modelo-header input[type="checkbox"] { width: 20px; height: 20px; margin-right: 12px; cursor: pointer; }
-    .modelo-header span { font-weight: 600; color: #374151; flex: 1; }
-    .modelo-body { padding: 12px; background: #fff; display: none; }
-    .modelo-body.ativo { display: block; }
-    .btn-add-modelo { background: #e0e7ff; color: #3730a3; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 8px; display: block; text-align: center; font-size: 0.9rem; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão de Manutenção Preventiva</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1f2937">
+<link rel="icon" type="image/png" href="icone.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--ink:#1f2937;--muted:#64748b;--line:#e5e7eb;--bg:#f3f4f6;--blue:#2563eb;--green:#059669;--red:#dc2626;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:#111827;min-height:100vh}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.app-header{background:var(--ink);color:#fff;padding:26px 20px;text-align:center}
+.app-header h1{font-size:1.45rem;margin-bottom:5px}.app-header p{font-size:.9rem;opacity:.82}
+.home-grid{display:grid;gap:15px;padding:20px;max-width:650px;margin:auto}
+.card{display:flex;flex-direction:column;gap:7px;padding:21px;border:0;border-radius:14px;background:#fff;border-left:7px solid var(--cor);box-shadow:0 2px 7px #0000000d;text-align:left;transition:transform .15s}
+.card:active{transform:scale(.99)}.card-badge{font-weight:750;font-size:1.08rem;color:var(--cor)}.card-desc{font-size:.88rem;color:var(--muted)}
+.app-footer{display:flex;justify-content:center;gap:25px;padding:18px}.footer-link{color:#475569;text-decoration:none;font-size:.9rem}
+.form-header{padding:12px 16px;text-align:center;color:#fff;background:var(--ink);position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between}
+.btn-voltar-topo{background:#ffffff26;border:0;color:#fff;font-size:1.25rem;width:40px;height:40px;border-radius:50%}.badge-tipo{padding:9px 14px;border-radius:999px;color:#fff;font-weight:750;font-size:.9rem;flex:1;margin:0 10px}.espaco-vazio{width:40px}
+.form-main{max-width:760px;margin:auto;padding:16px}
+.cabecalho,.secao{background:#fff;padding:17px;border-radius:13px;margin-bottom:15px;box-shadow:0 1px 4px #0000000a}
+.cabecalho h2,.secao h3{font-size:1rem;margin-bottom:13px;color:#334155;border-bottom:2px solid var(--line);padding-bottom:9px}
+.cabecalho label{display:block;font-size:.85rem;color:#374151;margin-bottom:12px}.cabecalho input{width:100%;padding:11px;margin-top:5px;border:1px solid #cbd5e1;border-radius:8px;font-size:1rem}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.item{border-bottom:1px solid #f1f5f9;padding:14px 0}.item:last-child{border:0}.item-pergunta{font-weight:650;font-size:.95rem;margin-bottom:10px}
+.item-ajuda{font-size:.8rem;color:var(--muted);margin:-5px 0 10px}
+.opcoes-resposta{display:flex;gap:8px;margin-bottom:10px}.opcoes-resposta button{flex:1;padding:10px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;font-weight:650}
+.opcoes-resposta button.ativo-sim{background:#059669;color:#fff;border-color:#059669}.opcoes-resposta button.ativo-nao{background:#475569;color:#fff;border-color:#475569}
+.item input[type=number],.item textarea,.item select{width:100%;;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:.94rem;margin:0 0 10px;font-family:inherit}
+.item textarea{min-height:62px;resize:vertical}.criticidade-label{font-size:.8rem;color:var(--muted);margin:3px 0 6px}
+.criticidades{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.criticidades button{padding:10px 4px;border-radius:8px;border:2px solid var(--line);background:#fff;font-size:.82rem;font-weight:700}
+.criticidades button[data-crit=alta].ativo{background:#dc2626;color:#fff;border-color:#dc2626}.criticidades button[data-crit=baixa].ativo{background:#d97706;color:#fff;border-color:#d97706}.criticidades button[data-crit=operando].ativo{background:#2563eb;color:#fff;border-color:#2563eb}
+.foto-area{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.foto-area label{display:inline-block;padding:8px 13px;border-radius:8px;background:#e0e7ff;color:#3730a3;font-size:.84rem;cursor:pointer}.foto-area input{display:none}
+.foto-preview{position:relative;width:66px;height:66px;border-radius:8px;overflow:hidden;border:1px solid #cbd5e1}.foto-preview img{width:100%;height:100%;object-fit:cover}.foto-preview button{position:absolute;top:0;right:0;background:#000a;color:#fff;border:0;width:21px;height:21px}
+.acoes-finais{display:flex;gap:12px;margin:20px 0 40px}.btn-primario,.btn-secundario{flex:1;padding:14px;border-radius:10px;border:0;font-size:.96rem;font-weight:750}.btn-primario{background:var(--ink);color:#fff}.btn-secundario{background:#e2e8f0;color:#334155}
+.escondido{display:none!important}
+.modal-bg{position:fixed;inset:0;background:#0008;display:flex;justify-content:center;align-items:center;z-index:100;padding:15px}.modal-box{background:#fff;padding:20px;border-radius:13px;width:100%;max-width:560px;max-height:86vh;display:flex;flex-direction:column}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}.modal-header h3{font-size:1.15rem}.search-box{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;font-size:1rem;margin-bottom:12px}
+.lista-historico-scroll{overflow-y:auto;flex:1;padding-right:4px}.hist-item{border-bottom:1px solid var(--line);padding:13px 0;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hist-info{font-size:.9rem;min-width:0}.hist-info strong{display:block;margin-bottom:4px;font-size:.93rem;overflow-wrap:anywhere}.hist-info span{color:var(--muted);font-size:.8rem}
+.hist-botoes{display:flex;gap:6px;flex-shrink:0}.hist-botoes button{padding:7px 9px;border-radius:6px;border:0;font-size:.78rem;font-weight:700}.btn-ver{background:#2563eb;color:#fff}.btn-del{background:#fee2e2;color:#991b1b}
+.sem-resultado{text-align:center;color:var(--muted);margin:22px 0}
+.modelo-lampada{border:1px solid var(--line);border-radius:9px;margin-bottom:11px;overflow:hidden}.modelo-header{display:flex;align-items:center;padding:12px;background:#f8fafc}.modelo-header.ativo{background:#eff6ff;border-bottom:1px solid var(--line)}.modelo-header input{width:20px;height:20px;margin-right:12px}.modelo-header span{font-weight:650;color:#334155;flex:1}.modelo-body{padding:12px;display:none}.modelo-body.ativo{display:block}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.grid-3 label{font-size:.8rem;color:#475569}.grid-3 input{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:7px;margin-top:4px;margin-bottom:10px}
+.status-auto{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0 10px}.status-chip{padding:6px 9px;border-radius:7px;font-size:.78rem;font-weight:750}.chip-alta{background:#fee2e2;color:#991b1b}.chip-baixa{background:#fef3c7;color:#92400e}.chip-ok{background:#dbeafe;color:#1e40af}
+.btn-add-modelo{background:#e0e7ff;color:#3730a3;border:0;padding:11px;border-radius:8px;font-weight:750;width:100%;margin-top:7px}
+.notice{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;padding:11px;border-radius:9px;font-size:.82rem;margin-bottom:13px}
+.status-final{display:grid;gap:8px}.status-final label{font-size:.88rem;color:#334155}.status-final select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px}
+@media(max-width:480px){.row-2{grid-template-columns:1fr 1fr;gap:8px}.form-main{padding:11px}.cabecalho,.secao{padding:14px}.acoes-finais{gap:8px}.btn-primario,.btn-secundario{padding:12px;font-size:.9rem}.hist-item{align-items:flex-start}.hist-botoes{flex-direction:column}}
+</style>
 </head>
 <body>
-
-  <div id="tela-inicial">
-    <header class="app-header">
-      <h1>Manutenção Preventiva</h1>
-      <p>Selecione o tipo de preventiva</p>
-    </header>
-    <main class="home-grid">
-      <button class="card" onclick="iniciarFormulario('luminotecnico')" style="--cor:#F59E0B">
-        <span class="card-badge">Luminotécnico</span>
-        <span class="card-desc">Lâmpadas, luminárias e emergência</span>
-      </button>
-      <button class="card" onclick="iniciarFormulario('inspecao_visual')" style="--cor:#3B82F6">
-        <span class="card-badge">Inspeção Visual</span>
-        <span class="card-desc">Interfones, botoeiras, PMVs, eletroímã, alarme, rack</span>
-      </button>
-      <button class="card" onclick="iniciarFormulario('lubrificacao_reapertos')" style="--cor:#10B981">
-        <span class="card-badge">Lubrificação e Reapertos</span>
-        <span class="card-desc">Portas, catracas, limpeza, reapertos e quadro elétrico</span>
-      </button>
-    </main>
-    <footer class="app-footer">
-      <a href="#" class="footer-link" onclick="abrirHistorico()">📋 Histórico</a>
-      <a href="admin.html" class="footer-link">⚙️ Admin</a>
-    </footer>
-  </div>
-
-  <div id="tela-formulario" class="escondido">
-    <header class="form-header">
-      <button class="btn-voltar-topo" onclick="voltarInicio()" title="Voltar">←</button>
-      <div class="badge-tipo" id="badge-tipo">Carregando...</div>
-      <div class="espaco-vazio"></div>
-    </header>
-    <main class="form-main">
-      <section class="cabecalho">
-        <h2>Dados da Inspeção</h2>
-        <label>Local da inspeção *<input type="text" id="local" required></label>
-        <label>Nome do técnico *<input type="text" id="tecnico" required></label>
-        <div class="row-2">
-          <label>Chapa *<input type="text" id="chapa" required></label>
-          <label>CFT / CREA *<input type="text" id="cft-crea" required></label>
-        </div>
-        <label>Data *<input type="date" id="data" required></label>
-      </section>
-      
-      <section id="secoes-container"></section>
-      
-      <div class="acoes-finais">
-        <button class="btn-secundario" onclick="voltarInicio()">Cancelar</button>
-        <button class="btn-primario" onclick="finalizar()">Gerar PDF</button>
-      </div>
-    </main>
-  </div>
-
-  <div id="modal-historico" class="modal-bg escondido">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h3>Histórico</h3>
-        <button onclick="fecharHistorico()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
-      </div>
-      <input type="text" id="input-busca" class="search-box" placeholder="🔍 Buscar pelo nome do local..." oninput="filtrarHistorico()">
-      <div id="lista-historico" class="lista-historico-scroll"></div>
-      <button class="btn-secundario" style="width:100%; margin-top:16px;" onclick="fecharHistorico()">Fechar</button>
-    </div>
-  </div>
-
-  <script>
-    const versaoAtual = "6.0"; 
-    
-    // Padrão de fábrica IMUTÁVEL (se a memória for limpa, ele se reconstrói daqui)
-    const FORMULARIOS_PADRAO = {
-      "luminotecnico": {
-        id: "luminotecnico", titulo: "Preventiva Luminotécnica", cor: "#F59E0B",
-        secoes: [
-          { id: "lum_total", titulo: "Quantitativo de Lâmpadas", itens: [
-            { id: "q_total_geral", pergunta: "Total Geral de Lâmpadas no Local", tipo: "numero", sem_critica: true }
-          ]},
-          { id: "lum_modelos", titulo: "Modelos de Lâmpadas Instaladas", tipo_especial: "modelos_lampadas", itens: [] },
-          { id: "lum_emergencia", titulo: "Luminárias de Emergência", itens: [
-            { id: "l4", pergunta: "Total de luminárias de emergência", tipo: "numero", sem_critica: true },
-            { id: "l5", pergunta: "Total de luminárias de emergência queimadas", tipo: "numero" },
-            { id: "l6", pergunta: "Total de luminárias de emergência com defeito", tipo: "numero" },
-            { id: "l7", pergunta: "Foi adotada alguma contramedida?", tipo: "sim_nao", sem_critica: true }
-          ]}
-        ]
-      },
-      "inspecao_visual": {
-        id: "inspecao_visual", titulo: "Preventiva — Inspeção Visual", cor: "#3B82F6",
-        secoes: [
-          { id: "iv1", titulo: "Interfones", itens: [
-            { id: "i1", pergunta: "Estão operando os 4?", tipo: "sim_nao" },
-            { id: "i2", pergunta: "Estão danificados?", tipo: "sim_nao" },
-            { id: "i3", pergunta: "Estão sujos?", tipo: "sim_nao" }
-          ]},
-          { id: "iv2", titulo: "Botoeiras", itens: [
-            { id: "i4", pergunta: "Estão operacionais?", tipo: "sim_nao" },
-            { id: "i5", pergunta: "Estão danificadas?", tipo: "sim_nao" },
-            { id: "i6", pergunta: "Estão sujas?", tipo: "sim_nao" }
-          ]},
-          { id: "iv3", titulo: "PMVs", itens: [
-            { id: "i7", pergunta: "Estão operando em normalidade?", tipo: "sim_nao" },
-            { id: "i8", pergunta: "Estão danificados?", tipo: "sim_nao" },
-            { id: "i9", pergunta: "Estão sujos?", tipo: "sim_nao" }
-          ]},
-          { id: "iv4", titulo: "Eletroímã", itens: [
-            { id: "i10", pergunta: "Está operando em normalidade?", tipo: "sim_nao" },
-            { id: "i11", pergunta: "Está em funcionamento com status no HUB?", tipo: "sim_nao" }
-          ]},
-          { id: "iv5", titulo: "Alarme de incêndio", itens: [
-            { id: "i12", pergunta: "Está operando?", tipo: "sim_nao" },
-            { id: "i13", pergunta: "Está apresentando algum alerta no visor?", tipo: "sim_nao" }
-          ]},
-          { id: "iv6", titulo: "Rack", itens: [
-            { id: "i14", pergunta: "Possui algum equipamento desligado?", tipo: "sim_nao" },
-            { id: "i15", pergunta: "Possui algum cheiro de queimado?", tipo: "sim_nao" },
-            { id: "i16", pergunta: "Possui algum material estranho dentro do rack?", tipo: "sim_nao" },
-            { id: "i17", pergunta: "Possui algo quebrado?", tipo: "sim_nao" },
-            { id: "i18", pergunta: "Possui algo faltando?", tipo: "sim_nao" },
-            { id: "i19", pergunta: "Possui algo não identificado?", tipo: "sim_nao" }
-          ]}
-        ]
-      },
-      "lubrificacao_reapertos": {
-        id: "lubrificacao_reapertos", titulo: "Preventiva — Lubrificação e Reapertos", cor: "#10B981",
-        secoes: [
-          { id: "lr1", titulo: "Inspeção", itens: [
-            { id: "r1", pergunta: "Porta de acesso — visualmente OK?", tipo: "sim_nao" },
-            { id: "r2", pergunta: "Porta de acesso — abre/fecha via manual?", tipo: "sim_nao" },
-            { id: "r3", pergunta: "Porta de acesso — abre/fecha via remoto?", tipo: "sim_nao" },
-            { id: "r4", pergunta: "Porta de acesso — sinais de vandalismo?", tipo: "sim_nao" },
-            { id: "r5", pergunta: "Portas de embarque — abre/fecha via remoto?", tipo: "sim_nao" },
-            { id: "r6", pergunta: "Portas de embarque — abre/fecha sem alimentação?", tipo: "sim_nao" },
-            { id: "r7", pergunta: "Porta de emergência — sinais de vandalismo?", tipo: "sim_nao" },
-            { id: "r8", pergunta: "Porta de emergência — operando normalmente?", tipo: "sim_nao" },
-            { id: "r9", pergunta: "Catracas — PCD abre via comando?", tipo: "sim_nao" },
-            { id: "r10", pergunta: "Catracas — sinais de vandalismo?", tipo: "sim_nao" },
-            { id: "r11", pergunta: "Catracas — entrada/saída normal?", tipo: "sim_nao" }
-          ]},
-          { id: "lr2", titulo: "Limpeza Técnica", itens: [
-            { id: "r12", pergunta: "Porta principal — limpeza dos trilhos?", tipo: "sim_nao" },
-            { id: "r13", pergunta: "Porta principal — lubrificação dos trilhos?", tipo: "sim_nao" },
-            { id: "r14", pergunta: "Porta de embarque — supressão de resíduos?", tipo: "sim_nao" },
-            { id: "r15", pergunta: "Catracas — limpeza da graxa velha?", tipo: "sim_nao" },
-            { id: "r16", pergunta: "Catracas — nova lubrificação?", tipo: "sim_nao" }
-          ]},
-          { id: "lr3", titulo: "Reapertos", itens: [
-            { id: "r17", pergunta: "Catracas — boa fixação?", tipo: "sim_nao" },
-            { id: "r18", pergunta: "Catracas — necessário reaperto?", tipo: "sim_nao" },
-            { id: "r19", pergunta: "Totem — boa fixação?", tipo: "sim_nao" },
-            { id: "r20", pergunta: "Totem — necessário reaperto?", tipo: "sim_nao" },
-            { id: "r21", pergunta: "Realizado aperto no quadro elétrico?", tipo: "sim_nao" }
-          ]}
-        ]
-      }
-    };
-
-    let DADOS_FORMULARIOS = JSON.parse(localStorage.getItem('formularios_customizados'));
-    
-    // Trava de segurança: se a versão for diferente, ele restaura o padrão
-    if (!DADOS_FORMULARIOS || localStorage.getItem('versao_formulario') !== versaoAtual) {
-      localStorage.setItem('formularios_customizados', JSON.stringify(FORMULARIOS_PADRAO));
-      localStorage.setItem('versao_formulario', versaoAtual);
-      DADOS_FORMULARIOS = JSON.parse(JSON.stringify(FORMULARIOS_PADRAO));
-    }
-
-    let FORMULARIO_ATUAL = null;
-    let RESPOSTAS = {};
-    let MODELOS_LAMPADAS = [
-      { id: "m1200", nome: "18W - 1200mm", ativo: false },
-      { id: "m600", nome: "9W - 600mm", ativo: false },
-      { id: "me27", nome: "E27 (Rosca)", ativo: false }
-    ];
-
-    function iniciarFormulario(tipo) {
-      FORMULARIO_ATUAL = DADOS_FORMULARIOS[tipo];
-      RESPOSTAS = {};
-      MODELOS_LAMPADAS.forEach(m => m.ativo = false);
-      
-      document.getElementById('tela-inicial').classList.add('escondido');
-      document.getElementById('tela-formulario').classList.remove('escondido');
-      
-      const badge = document.getElementById('badge-tipo');
-      badge.textContent = FORMULARIO_ATUAL.titulo;
-      badge.style.background = FORMULARIO_ATUAL.cor;
-      
-      document.getElementById('data').value = new Date().toISOString().split('T')[0];
-      document.getElementById('local').value = '';
-      document.getElementById('tecnico').value = '';
-      document.getElementById('chapa').value = '';
-      document.getElementById('cft-crea').value = '';
-      
-      montarSecoes();
-      window.scrollTo(0,0);
-    }
-
-    function voltarInicio() {
-      if (confirm("Deseja sair? Os dados não salvos serão perdidos.")) {
-        document.getElementById('tela-formulario').classList.add('escondido');
-        document.getElementById('tela-inicial').classList.remove('escondido');
-      }
-    }
-
-    function comprimirImagem(file, maxWidth, callback) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          if (width > maxWidth) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
-          }
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          callback(canvas.toDataURL('image/jpeg', 0.7));
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function renderizarModelosLampadas(container) {
-      container.innerHTML = '';
-      
-      MODELOS_LAMPADAS.forEach(modelo => {
-        const divModelo = document.createElement('div');
-        divModelo.className = 'modelo-lampada';
-        
-        const header = document.createElement('div');
-        header.className = `modelo-header ${modelo.ativo ? 'ativo' : ''}`;
-        header.innerHTML = `
-          <input type="checkbox" id="check_${modelo.id}" ${modelo.ativo ? 'checked' : ''}>
-          <span>${modelo.nome}</span>
-        `;
-        
-        const body = document.createElement('div');
-        body.className = `modelo-body ${modelo.ativo ? 'ativo' : ''}`;
-        body.id = `body_${modelo.id}`;
-        
-        const respQtde = RESPOSTAS[`qtde_${modelo.id}`]?.valor || '';
-        const respQueimadas = RESPOSTAS[`queim_${modelo.id}`]?.valor || '';
-        const respDefeito = RESPOSTAS[`defeito_${modelo.id}`]?.valor || '';
-        const respCrit = RESPOSTAS[`crit_${modelo.id}`]?.criticidade || '';
-
-        body.innerHTML = `
-          <label style="font-size:0.85rem; color:#374151; display:block; margin-bottom:4px;">Quantidade instalada:</label>
-          <input type="number" placeholder="Ex: 20" value="${respQtde}" oninput="salvarResp('qtde_${modelo.id}', this.value)" style="margin-bottom:12px; width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
-          
-          <label style="font-size:0.85rem; color:#374151; display:block; margin-bottom:4px;">Queimadas:</label>
-          <input type="number" placeholder="Ex: 2" value="${respQueimadas}" oninput="salvarResp('queim_${modelo.id}', this.value)" style="margin-bottom:12px; width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
-          
-          <label style="font-size:0.85rem; color:#374151; display:block; margin-bottom:4px;">Com Defeito:</label>
-          <input type="number" placeholder="Ex: 0" value="${respDefeito}" oninput="salvarResp('defeito_${modelo.id}', this.value)" style="margin-bottom:12px; width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;">
-          
-          <div class="criticidade-label">Grau de criticidade (Defeito/Queimadas):</div>
-          <div class="criticidades">
-            <button type="button" data-crit="alta" class="${respCrit === 'alta' ? 'ativo' : ''}" onclick="salvarCrit('crit_${modelo.id}', 'alta', this)">🔴 Alta</button>
-            <button type="button" data-crit="baixa" class="${respCrit === 'baixa' ? 'ativo' : ''}" onclick="salvarCrit('crit_${modelo.id}', 'baixa', this)">🟡 Baixa</button>
-            <button type="button" data-crit="operando" class="${respCrit === 'operando' ? 'ativo' : ''}" onclick="salvarCrit('crit_${modelo.id}', 'operando', this)">🔵 Operando</button>
-          </div>
-        `;
-        
-        header.querySelector('input').onchange = (e) => {
-          modelo.ativo = e.target.checked;
-          if (modelo.ativo) {
-            header.classList.add('ativo');
-            body.classList.add('ativo');
-          } else {
-            header.classList.remove('ativo');
-            body.classList.remove('ativo');
-            delete RESPOSTAS[`qtde_${modelo.id}`];
-            delete RESPOSTAS[`queim_${modelo.id}`];
-            delete RESPOSTAS[`defeito_${modelo.id}`];
-            delete RESPOSTAS[`crit_${modelo.id}`];
-          }
-        };
-
-        divModelo.appendChild(header);
-        divModelo.appendChild(body);
-        container.appendChild(divModelo);
-      });
-      
-      const btnAdd = document.createElement('button');
-      btnAdd.className = 'btn-add-modelo';
-      btnAdd.textContent = '+ Adicionar outro modelo (ex: Refletor)';
-      btnAdd.onclick = () => {
-        const nome = prompt("Digite o nome do novo modelo (Ex: Refletor):");
-        if (nome) {
-          MODELOS_LAMPADAS.push({ id: 'm_' + Date.now(), nome: nome, ativo: true });
-          renderizarModelosLampadas(container);
-        }
-      };
-      container.appendChild(btnAdd);
-    }
-
-    function salvarResp(id, valor) {
-      RESPOSTAS[id] = { ...(RESPOSTAS[id] || {}), valor: valor };
-    }
-    
-    function salvarCrit(id, crit, btn) {
-      const container = btn.parentElement;
-      container.querySelectorAll('button').forEach(b => b.classList.remove('ativo'));
-      btn.classList.add('ativo');
-      RESPOSTAS[id] = { ...(RESPOSTAS[id] || {}), criticidade: crit };
-    }
-
-    function montarSecoes() {
-      const container = document.getElementById('secoes-container');
-      container.innerHTML = '';
-      
-      FORMULARIO_ATUAL.secoes.forEach(secao => {
-        const divSecao = document.createElement('div');
-        divSecao.className = 'secao';
-        divSecao.innerHTML = `<h3>${secao.titulo}</h3>`;
-        
-        if (secao.tipo_especial === 'modelos_lampadas') {
-          const divModelos = document.createElement('div');
-          divSecao.appendChild(divModelos);
-          renderizarModelosLampadas(divModelos);
-          container.appendChild(divSecao);
-          return; 
-        }
-
-        secao.itens.forEach(item => {
-          const divItem = document.createElement('div');
-          divItem.className = 'item';
-          
-          const p = document.createElement('div');
-          p.className = 'item-pergunta';
-          p.textContent = item.pergunta;
-          divItem.appendChild(p);
-
-          const respSalva = RESPOSTAS[item.id] || {};
-
-          if (item.tipo === 'numero') {
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.placeholder = 'Digite o total';
-            input.min = '0';
-            input.value = respSalva.valor || '';
-            input.oninput = (e) => {
-              RESPOSTAS[item.id] = { ...(RESPOSTAS[item.id] || {}), valor: e.target.value };
-            };
-            divItem.appendChild(input);
-          } else {
-            const divOpcoes = document.createElement('div');
-            divOpcoes.className = 'opcoes-resposta';
-            ['Sim', 'Não'].forEach(op => {
-              const btn = document.createElement('button');
-              btn.type = 'button';
-              btn.textContent = op;
-              if (respSalva.resposta === op) btn.classList.add(op === 'Sim' ? 'ativo-sim' : 'ativo-nao');
-              
-              btn.onclick = () => {
-                divOpcoes.querySelectorAll('button').forEach(b => b.classList.remove('ativo-sim', 'ativo-nao'));
-                btn.classList.add(op === 'Sim' ? 'ativo-sim' : 'ativo-nao');
-                RESPOSTAS[item.id] = { ...(RESPOSTAS[item.id] || {}), resposta: op };
-                
-                if (op === 'Não' && !item.sem_critica) {
-                  const bCrit = divItem.querySelector('button[data-crit="operando"]');
-                  if (bCrit && !divItem.querySelector('.criticidades .ativo')) {
-                    bCrit.classList.add('ativo');
-                    RESPOSTAS[item.id].criticidade = 'operando';
-                  }
-                }
-              };
-              divOpcoes.appendChild(btn);
-            });
-            divItem.appendChild(divOpcoes);
-          }
-
-          if (!item.sem_critica) {
-            const divCrit = document.createElement('div');
-            divCrit.innerHTML = `
-              <div class="criticidade-label">Grau de criticidade *</div>
-              <div class="criticidades">
-                <button type="button" data-crit="alta" class="${respSalva.criticidade === 'alta' ? 'ativo' : ''}">🔴 Alta</button>
-                <button type="button" data-crit="baixa" class="${respSalva.criticidade === 'baixa' ? 'ativo' : ''}">🟡 Baixa</button>
-                <button type="button" data-crit="operando" class="${respSalva.criticidade === 'operando' ? 'ativo' : ''}">🔵 Operando</button>
-              </div>`;
-            divCrit.querySelectorAll('button[data-crit]').forEach(btn => {
-              btn.onclick = () => {
-                divCrit.querySelectorAll('button').forEach(b => b.classList.remove('ativo'));
-                btn.classList.add('ativo');
-                RESPOSTAS[item.id] = { ...(RESPOSTAS[item.id] || {}), criticidade: btn.dataset.crit };
-              };
-            });
-            divItem.appendChild(divCrit);
-          }
-
-          const obs = document.createElement('textarea');
-          obs.placeholder = 'Observação (opcional)';
-          obs.value = respSalva.observacao || '';
-          obs.oninput = (e) => { RESPOSTAS[item.id] = { ...(RESPOSTAS[item.id] || {}), observacao: e.target.value }; };
-          divItem.appendChild(obs);
-
-          const divFoto = document.createElement('div');
-          divFoto.className = 'foto-area';
-          
-          if (respSalva.fotos && respSalva.fotos.length > 0) {
-            respSalva.fotos.forEach(fotoBase64 => {
-              const prev = document.createElement('div');
-              prev.className = 'foto-preview';
-              prev.innerHTML = `<img src="${fotoBase64}"><button type="button">×</button>`;
-              prev.querySelector('button').onclick = () => {
-                const idx = RESPOSTAS[item.id].fotos.indexOf(fotoBase64);
-                if (idx >= 0) RESPOSTAS[item.id].fotos.splice(idx, 1);
-                prev.remove();
-              };
-              divFoto.appendChild(prev);
-            });
-          }
-
-          const labelFoto = document.createElement('label');
-          labelFoto.innerHTML = '📷 Anexar foto';
-          const inputFoto = document.createElement('input');
-          inputFoto.type = 'file';
-          inputFoto.accept = 'image/*';
-          inputFoto.multiple = true;
-          inputFoto.onchange = (e) => {
-            Array.from(e.target.files).forEach(file => {
-              comprimirImagem(file, 800, (base64Comprimida) => {
-                const fotos = RESPOSTAS[item.id]?.fotos || [];
-                fotos.push(base64Comprimida);
-                RESPOSTAS[item.id] = { ...(RESPOSTAS[item.id] || {}), fotos };
-                
-                const prev = document.createElement('div');
-                prev.className = 'foto-preview';
-                prev.innerHTML = `<img src="${base64Comprimida}"><button type="button">×</button>`;
-                prev.querySelector('button').onclick = () => {
-                  const idx = RESPOSTAS[item.id].fotos.indexOf(base64Comprimida);
-                  if (idx >= 0) RESPOSTAS[item.id].fotos.splice(idx, 1);
-                  prev.remove();
-                };
-                divFoto.insertBefore(prev, labelFoto);
-              });
-            });
-          };
-          labelFoto.appendChild(inputFoto);
-          divFoto.appendChild(labelFoto);
-          divItem.appendChild(divFoto);
-          
-          divSecao.appendChild(divItem);
-        });
-        container.appendChild(divSecao);
-      });
-    }
-
-    function gerarNumeroRelatorio() {
-      const ano = new Date().getFullYear();
-      const chave = `contador_${ano}`;
-      let atual = parseInt(localStorage.getItem(chave) || '0') + 1;
-      localStorage.setItem(chave, atual);
-      return `PREV-${ano}-${String(atual).padStart(4, '0')}`;
-    }
-
-    function finalizar() {
-      const cabecalho = {
-        local: document.getElementById('local').value.trim(),
-        tecnico: document.getElementById('tecnico').value.trim(),
-        chapa: document.getElementById('chapa').value.trim(),
-        cftCrea: document.getElementById('cft-crea').value.trim(),
-        data: document.getElementById('data').value
-      };
-
-      if (!cabecalho.local || !cabecalho.tecnico || !cabecalho.chapa || !cabecalho.cftCrea || !cabecalho.data) {
-        alert("Preencha todos os campos do cabeçalho!"); return;
-      }
-
-      let faltamCriticidades = false;
-      FORMULARIO_ATUAL.secoes.forEach(s => {
-        if (s.tipo_especial === 'modelos_lampadas') {
-          MODELOS_LAMPADAS.forEach(m => {
-             if (m.ativo && !RESPOSTAS[`crit_${m.id}`]?.criticidade) faltamCriticidades = true;
-          });
-        } else {
-          s.itens.forEach(it => {
-            if (!it.sem_critica && !RESPOSTAS[it.id]?.criticidade) faltamCriticidades = true;
-          });
-        }
-      });
-
-      if (faltamCriticidades) {
-        alert("Por favor, selecione o grau de criticidade nos itens que exigem avaliação antes de gerar o PDF."); return;
-      }
-
-      const modelosSalvos = MODELOS_LAMPADAS.filter(m => m.ativo).map(m => ({
-        nome: m.nome,
-        quantidade: RESPOSTAS[`qtde_${m.id}`]?.valor || '0',
-        queimadas: RESPOSTAS[`queim_${m.id}`]?.valor || '0',
-        defeito: RESPOSTAS[`defeito_${m.id}`]?.valor || '0',
-        criticidade: RESPOSTAS[`crit_${m.id}`]?.criticidade
-      }));
-
-      const relatorio = {
-        numero: gerarNumeroRelatorio(),
-        tipo: FORMULARIO_ATUAL.id,
-        titulo: FORMULARIO_ATUAL.titulo,
-        cabecalho: cabecalho,
-        secoes: FORMULARIO_ATUAL.secoes,
-        respostas: RESPOSTAS,
-        modelos_lampadas: modelosSalvos,
-        geradoEm: new Date().toISOString()
-      };
-
-      let historico = JSON.parse(localStorage.getItem('historico') || '[]');
-      historico.unshift(relatorio);
-      localStorage.setItem('historico', JSON.stringify(historico));
-
-      gerarPDF(relatorio);
-      
-      alert("PDF gerado e relatório salvo no histórico!");
-      window.location.reload();
-    }
-
-    function gerarPDF(rel) {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('p', 'mm', 'a4');
-      let y = 20;
-      const margem = 15;
-      
-      const CORES = { alta: [239, 68, 68], baixa: [245, 158, 11], operando: [59, 130, 246] };
-      const NOMES = { alta: 'ALTA', baixa: 'BAIXA', operando: 'OPERANDO' };
-
-      doc.setFillColor(31, 41, 55);
-      doc.rect(0, 0, 210, 30, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(14); doc.setFont(undefined, 'bold');
-      doc.text(rel.titulo, margem, 12);
-      doc.setFontSize(10); doc.setFont(undefined, 'normal');
-      doc.text(`Relatório: ${rel.numero}`, margem, 20);
-
-      y = 40; doc.setTextColor(0, 0, 0); doc.setFontSize(10);
-      doc.text(`Local: ${rel.cabecalho.local}`, margem, y); y += 6;
-      doc.text(`Técnico: ${rel.cabecalho.tecnico}  |  Chapa: ${rel.cabecalho.chapa}`, margem, y); y += 6;
-      doc.text(`CFT/CREA: ${rel.cabecalho.cftCrea}  |  Data: ${rel.cabecalho.data.split('-').reverse().join('/')}`, margem, y); y += 10;
-
-      rel.secoes.forEach(secao => {
-        if (y > 260) { doc.addPage(); y = 20; }
-        doc.setFillColor(243, 244, 246);
-        doc.rect(margem - 3, y - 5, 210 - 2*margem + 6, 8, 'F');
-        doc.setFont(undefined, 'bold'); doc.setFontSize(11);
-        doc.text(secao.titulo, margem, y); y += 10;
-        
-        doc.setFont(undefined, 'normal'); doc.setFontSize(9);
-
-        if (secao.tipo_especial === 'modelos_lampadas') {
-          if (rel.modelos_lampadas && rel.modelos_lampadas.length > 0) {
-            rel.modelos_lampadas.forEach(mod => {
-              if (y > 260) { doc.addPage(); y = 20; }
-              const crit = mod.criticidade || 'operando';
-              doc.setFillColor(...CORES[crit]);
-              doc.circle(margem + 1, y - 1, 2, 'F');
-              
-              const texto = `${mod.nome}: ${mod.quantidade} instaladas | Queimadas: ${mod.queimadas} | Defeito: ${mod.defeito} | ${NOMES[crit]}`;
-              doc.text(texto, margem + 6, y);
-              y += 6;
-            });
-          } else {
-            doc.text("Nenhum modelo especificado.", margem + 6, y); y += 6;
-          }
-          y += 4;
-          return;
-        }
-
-        secao.itens.forEach(item => {
-          const resp = rel.respostas[item.id] || {};
-          if (y > 260) { doc.addPage(); y = 20; }
-
-          const xTexto = item.sem_critica ? margem : margem + 6;
-          
-          if (!item.sem_critica) {
-            const crit = resp.criticidade || 'operando';
-            doc.setFillColor(...CORES[crit]);
-            doc.circle(margem + 1, y - 1, 2, 'F');
-          }
-
-          const perguntaTexto = `${item.pergunta}   `;
-          doc.text(perguntaTexto, xTexto, y);
-          
-          const larguraPergunta = doc.getTextWidth(perguntaTexto);
-          let xResposta = xTexto + larguraPergunta;
-          
-          doc.setFont(undefined, 'bold');
-          const txtResp = item.tipo === 'numero' ? `R: ${resp.valor || '0'}` : `R: ${resp.resposta || '—'}`;
-          doc.text(txtResp, xResposta, y);
-          
-          const larguraResposta = doc.getTextWidth(txtResp);
-          let xCrit = xResposta + larguraResposta + 4;
-
-          doc.setFont(undefined, 'normal');
-          if (!item.sem_critica) {
-             doc.text(`${NOMES[resp.criticidade || 'operando']}`, xCrit, y);
-          }
-
-          y += 4.5;
-
-          if (resp.observacao) {
-            doc.setTextColor(100); doc.setFontSize(8);
-            const obs = doc.splitTextToSize(`Obs.: ${resp.observacao}`, 210 - xTexto - margem);
-            doc.text(obs, xTexto, y); y += obs.length * 4;
-            doc.setTextColor(0,0,0);
-            doc.setFontSize(9);
-          }
-
-          if (resp.fotos && resp.fotos.length > 0) {
-            const imgWidth = 22; const imgHeight = 22; let xImg = xTexto;
-            if (y > 250) { doc.addPage(); y = 20; }
-            y += 2;
-            resp.fotos.forEach((fotoBase64) => {
-              if (xImg + imgWidth > 210 - margem) {
-                xImg = xTexto; y += imgHeight + 4;
-                if (y > 260) { doc.addPage(); y = 20; xImg = xTexto; }
-              }
-              doc.addImage(fotoBase64, 'JPEG', xImg, y, imgWidth, imgHeight);
-              xImg += imgWidth + 4;
-            });
-            y += imgHeight + 6;
-          }
-
-          y += 3;
-        });
-        y += 4;
-      });
-
-      if (y > 260) { doc.addPage(); y = 20; }
-      
-      doc.setDrawColor(200);
-      doc.line(margem, y, 210 - margem, y);
-      y += 6;
-      
-      doc.setFontSize(9); doc.setFont(undefined, 'bold'); doc.setTextColor(0);
-      doc.text("LEGENDA DE CRITICIDADE:", margem, y); y += 5;
-      
-      doc.setFontSize(8); doc.setFont(undefined, 'normal');
-      
-      doc.setFillColor(...CORES.alta);
-      doc.circle(margem + 2, y - 1, 2, 'F');
-      doc.text("ALTA = Inoperante", margem + 8, y); y += 4.5;
-      
-      doc.setFillColor(...CORES.baixa);
-      doc.circle(margem + 2, y - 1, 2, 'F');
-      doc.text("BAIXA = Defeito / Sujo / Danificado", margem + 8, y); y += 4.5;
-      
-      doc.setFillColor(...CORES.operando);
-      doc.circle(margem + 2, y - 1, 2, 'F');
-      doc.text("OPERANDO = Normalidade", margem + 8, y); y += 10;
-
-      doc.setFontSize(8); doc.setTextColor(120);
-      doc.text(`Gerado em ${new Date().toLocaleString('pt-BR')} — ${rel.numero}`, margem, 285);
-
-      doc.save(`${rel.numero}.pdf`);
-    }
-
-    function abrirHistorico() {
-      const hist = JSON.parse(localStorage.getItem('historico') || '[]');
-      const lista = document.getElementById('lista-historico');
-      lista.innerHTML = '';
-
-      if (hist.length === 0) {
-        lista.innerHTML = '<p class="sem-resultado">Nenhum relatório finalizado ainda.</p>';
-      } else {
-        hist.forEach((rel, index) => {
-          const div = document.createElement('div');
-          div.className = 'hist-item';
-          
-          const dataFormatada = new Date(rel.geradoEm).toLocaleDateString('pt-BR');
-          const tipoLimpo = rel.titulo.replace('Preventiva — ', '').replace('Preventiva ', '');
-          
-          div.innerHTML = `
-            <div class="hist-info">
-              <strong>${rel.numero} - ${tipoLimpo}</strong>
-              <span>${rel.cabecalho.local} - ${dataFormatada}</span>
-            </div>
-            <div class="hist-botoes">
-              <button class="btn-ver" onclick="baixarPdfHistorico(${index})">Baixar</button>
-              <button class="btn-del" onclick="apagarHistorico(${index})">X</button>
-            </div>
-          `;
-          lista.appendChild(div);
-        });
-      }
-      document.getElementById('modal-historico').classList.remove('escondido');
-    }
-
-    function fecharHistorico() {
-      document.getElementById('modal-historico').classList.add('escondido');
-    }
-
-    function apagarHistorico(index) {
-      if (confirm("Tem certeza que deseja apagar este relatório do histórico?")) {
-        let hist = JSON.parse(localStorage.getItem('historico') || '[]');
-        hist.splice(index, 1);
-        localStorage.setItem('historico', JSON.stringify(hist));
-        abrirHistorico(); 
-      }
-    }
-
-    function baixarPdfHistorico(index) {
-      const hist = JSON.parse(localStorage.getItem('historico') || '[]');
-      const rel = hist[index];
-      if (rel) gerarPDF(rel);
-    }
-
-    function filtrarHistorico() {
-      const termo = document.getElementById('input-busca').value.toLowerCase();
-      const hist = JSON.parse(localStorage.getItem('historico') || '[]');
-      const lista = document.getElementById('lista-historico');
-      lista.innerHTML = '';
-
-      const filtrados = hist.filter(rel => 
-        rel.cabecalho.local.toLowerCase().includes(termo) || 
-        rel.numero.toLowerCase().includes(termo)
-      );
-
-      if (filtrados.length === 0) {
-        lista.innerHTML = '<p class="sem-resultado">Nenhum relatório encontrado para esta busca.</p>';
-      } else {
-        filtrados.forEach((rel) => {
-          const originalIndex = hist.findIndex(h => h.numero === rel.numero);
-          const div = document.createElement('div');
-          div.className = 'hist-item';
-          
-          const dataFormatada = new Date(rel.geradoEm).toLocaleDateString('pt-BR');
-          const tipoLimpo = rel.titulo.replace('Preventiva — ', '').replace('Preventiva ', '');
-          
-          div.innerHTML = `
-            <div class="hist-info">
-              <strong>${rel.numero} - ${tipoLimpo}</strong>
-              <span>${rel.cabecalho.local} - ${dataFormatada}</span>
-            </div>
-            <div class="hist-botoes">
-              <button class="btn-ver" onclick="baixarPdfHistorico(${originalIndex})">Baixar</button>
-              <button class="btn-del" onclick="apagarHistorico(${originalIndex})">X</button>
-            </div>
-          `;
-          lista.appendChild(div);
-        });
-      }
-    }
-  </script>
+<div id="tela-inicial">
+<header class="app-header"><h1>Manutenção Preventiva</h1><p>Registros técnicos, acompanhamento e histórico de inspeções</p></header>
+<main class="home-grid">
+<button class="card" onclick="iniciarFormulario('luminotecnico')" style="--cor:#d97706"><span class="card-badge">Luminotécnica</span><span class="card-desc">Quantitativo de lâmpadas, luminárias e iluminação de emergência.</span></button>
+<button class="card" onclick="iniciarFormulario('inspecao_visual')" style="--cor:#2563eb"><span class="card-badge">Inspeção visual</span><span class="card-desc">Verificação de interfones, botoeiras, PMVs, eletroímãs, alarme de incêndio e rack.</span></button>
+<button class="card" onclick="iniciarFormulario('lubrificacao_reapertos')" style="--cor:#059669"><span class="card-badge">Lubrificação e reapertos</span><span class="card-desc">Inspeção funcional, limpeza técnica, lubrificação e fixações.</span></button>
+</main>
+<footer class="app-footer"><a href="#" class="footer-link" onclick="abrirHistorico();return false">📋 Histórico de relatórios</a><a href="admin.html" class="footer-link">⚙️ Administração</a></footer>
+</div>
+<div id="tela-formulario" class="escondido">
+<header class="form-header"><button class="btn-voltar-topo" onclick="voltarInicio()" title="Voltar">←</button><div class="badge-tipo" id="badge-tipo">Preventiva</div><div class="espaco-vazio"></div></header>
+<main class="form-main">
+<section class="cabecalho"><h2>Identificação da inspeção</h2>
+<label>Local da inspeção *<input type="text" id="local" placeholder="Informe o local ou equipamento"></label>
+<label>Nome do técnico *<input type="text" id="tecnico" placeholder="Nome completo"></label>
+<div class="row-2"><label>Chapa *<input type="text" id="chapa"></label><label>CFT / CREA *<input type="text" id="cft-crea"></label></div>
+<label>Data da inspeção *<input type="date" id="data"></label>
+</section>
+<section id="secoes-container"></section>
+<section class="secao"><h3>Encerramento da atividade</h3><div class="status-final"><label>Status da preventiva<select id="status-final"><option value="Concluída sem pendências">Concluída sem pendências</option><option value="Concluída com pendências">Concluída com pendências</option><option value="Parcialmente executada">Parcialmente executada</option></select></label><label>Resumo das pendências / recomendações<textarea id="pendencias" placeholder="Descreva o que ficou pendente, a ação recomendada e, se aplicável, a necessidade de manutenção corretiva." style="width:100%;min-height:75px;padding:10px;border:1px solid #cbd5e1;border-radius:8px;margin-top:5px"></textarea></label><label>Contramedidas adotadas<textarea id="contramedidas" placeholder="Informe os ajustes, correções ou ações realizadas durante a inspeção." style="width:100%;min-height:65px;padding:10px;border:1px solid #cbd5e1;border-radius:8px;margin-top:5px"></textarea></label></div></section>
+<div class="acoes-finais"><button class="btn-secundario" onclick="voltarInicio()">Cancelar</button><button class="btn-primario" onclick="finalizar()">Finalizar e gerar PDF</button></div>
+</main></div>
+<div id="modal-historico" class="modal-bg escondido"><div class="modal-box"><div class="modal-header"><h3>Histórico de inspeções</h3><button onclick="fecharHistorico()" style="background:none;border:0;font-size:1.6rem">&times;</button></div><input type="text" id="input-busca" class="search-box" placeholder="Buscar por local, número ou tipo..." oninput="filtrarHistorico()"><div id="lista-historico" class="lista-historico-scroll"></div><button class="btn-secundario" style="width:100%;margin-top:14px" onclick="fecharHistorico()">Fechar</button></div></div>
+<script>
+const versaoAtual="7.0";
+const FORMULARIOS_PADRAO={
+luminotecnico:{id:"luminotecnico",titulo:"Preventiva Luminotécnica",cor:"#d97706",secoes:[
+{id:"lum_total",titulo:"Quantitativo geral",itens:[{id:"q_total_geral",pergunta:"Quantidade total de lâmpadas instaladas no local",tipo:"numero",sem_critica:true}]},
+{id:"lum_modelos",titulo:"Levantamento por modelo de lâmpada",tipo_especial:"modelos_lampadas",itens:[]},
+{id:"lum_emergencia",titulo:"Iluminação de emergência",itens:[
+{id:"l4",pergunta:"Quantidade total de luminárias de emergência",tipo:"numero",sem_critica:true},
+{id:"l5",pergunta:"Quantidade de luminárias de emergência queimadas",tipo:"numero",sem_critica:true},
+{id:"l6",pergunta:"Quantidade de luminárias de emergência com defeito",tipo:"numero",sem_critica:true},
+{id:"l7",pergunta:"Foi necessária alguma intervenção ou contramedida?",tipo:"sim_nao",sem_critica:true},
+{id:"l8",pergunta:"As luminárias de emergência permanecem operacionais após os testes?",tipo:"sim_nao",sem_critica:true}
+]}]},
+inspecao_visual:{id:"inspecao_visual",titulo:"Preventiva — Inspeção Visual",cor:"#2563eb",secoes:[
+{id:"iv1",titulo:"Interfones",itens:[
+{id:"i1",pergunta:"Os quatro interfones estão operando normalmente?",tipo:"sim_nao",ajuda:"Se houver falha, identifique a unidade e o sintoma na observação."},
+{id:"i2",pergunta:"Há interfones danificados?",tipo:"sim_nao"},
+{id:"i3",pergunta:"Há necessidade de limpeza dos interfones?",tipo:"sim_nao"}]},
+{id:"iv2",titulo:"Botoeiras",itens:[
+{id:"i4",pergunta:"As botoeiras estão operacionais?",tipo:"sim_nao"},
+{id:"i5",pergunta:"Há botoeiras danificadas?",tipo:"sim_nao",ajuda:"Identifique a botoeira ou a posição com anormalidade."},
+{id:"i6",pergunta:"Há necessidade de limpeza das botoeiras?",tipo:"sim_nao"}]},
+{id:"iv3",titulo:"Painéis de Mensagens Variáveis (PMVs)",itens:[
+{id:"i7",pergunta:"Os PMVs apresentam imagem e comunicação normais?",tipo:"sim_nao"},
+{id:"i8",pergunta:"Há danos físicos nos PMVs?",tipo:"sim_nao"},
+{id:"i9",pergunta:"Há necessidade de limpeza dos PMVs?",tipo:"sim_nao"}]},
+{id:"iv4",titulo:"Eletroímãs e controle de acesso",itens:[
+{id:"i10",pergunta:"O eletroímã realiza o acionamento e a liberação corretamente?",tipo:"sim_nao"},
+{id:"i11",pergunta:"O status do eletroímã está sendo reconhecido corretamente pelo HUB?",tipo:"sim_nao",ajuda:"Diferencie falha de acionamento de falha de comunicação/status."}]},
+{id:"iv5",titulo:"Sistema de alarme de incêndio",itens:[
+{id:"i12",pergunta:"A central de alarme de incêndio está em condição normal de operação?",tipo:"sim_nao"},
+{id:"i13",pergunta:"A central apresenta alerta, falha ou sinalização no visor?",tipo:"sim_nao",ajuda:"Se sim, transcreva a mensagem ou o código exibido."}]},
+{id:"iv6",titulo:"Rack e equipamentos",itens:[
+{id:"i14",pergunta:"Existe algum equipamento desligado ou sem alimentação?",tipo:"sim_nao"},
+{id:"i15",pergunta:"Foi identificado cheiro de queimado ou aquecimento anormal?",tipo:"sim_nao"},
+{id:"i16",pergunta:"Há materiais estranhos ou objetos armazenados indevidamente no rack?",tipo:"sim_nao"},
+{id:"i17",pergunta:"Há equipamentos, conectores ou componentes danificados?",tipo:"sim_nao"},
+{id:"i18",pergunta:"Foi identificada ausência de algum componente previsto?",tipo:"sim_nao"},
+{id:"i19",pergunta:"Há cabos ou componentes sem identificação?",tipo:"sim_nao"}]}]},
+lubrificacao_reapertos:{id:"lubrificacao_reapertos",titulo:"Preventiva — Lubrificação e Reapertos",cor:"#059669",secoes:[
+{id:"lr1",titulo:"Inspeção funcional e mecânica",itens:[
+{id:"r1",pergunta:"Porta de acesso: condição visual satisfatória?",tipo:"sim_nao"},
+{id:"r2",pergunta:"Porta de acesso: abertura e fechamento pelo comando local funcionam?",tipo:"sim_nao"},
+{id:"r3",pergunta:"Porta de acesso: abertura e fechamento pelo comando remoto funcionam?",tipo:"sim_nao"},
+{id:"r4",pergunta:"Porta de acesso: há sinais de vandalismo ou danos?",tipo:"sim_nao"},
+{id:"r5",pergunta:"Portas de embarque: abertura e fechamento pelo comando remoto funcionam?",tipo:"sim_nao"},
+{id:"r6",pergunta:"Portas de embarque: operação manual em condição segura e adequada?",tipo:"sim_nao"},
+{id:"r7",pergunta:"Porta de emergência: há sinais de vandalismo ou danos?",tipo:"sim_nao"},
+{id:"r8",pergunta:"Porta de emergência: funcionamento normal e desobstruído?",tipo:"sim_nao"},
+{id:"r9",pergunta:"Catraca PCD: abertura pelo comando ocorre corretamente?",tipo:"sim_nao"},
+{id:"r10",pergunta:"Catracas: há sinais de vandalismo ou danos?",tipo:"sim_nao"},
+{id:"r11",pergunta:"Catracas: entrada e saída ocorrem normalmente?",tipo:"sim_nao"}]},
+{id:"lr2",titulo:"Limpeza e lubrificação",itens:[
+{id:"r12",pergunta:"Trilhos da porta principal: limpeza realizada?",tipo:"sim_nao"},
+{id:"r13",pergunta:"Trilhos da porta principal: lubrificação realizada?",tipo:"sim_nao"},
+{id:"r14",pergunta:"Portas de embarque: resíduos e obstruções removidos?",tipo:"sim_nao"},
+{id:"r15",pergunta:"Catracas: remoção da graxa antiga e resíduos realizada?",tipo:"sim_nao"},
+{id:"r16",pergunta:"Catracas: lubrificação conforme necessidade realizada?",tipo:"sim_nao"}]},
+{id:"lr3",titulo:"Fixações e reapertos",itens:[
+{id:"r17",pergunta:"Catracas: fixação mecânica está firme?",tipo:"sim_nao"},
+{id:"r18",pergunta:"Catracas: foi identificado reaperto necessário?",tipo:"sim_nao"},
+{id:"r19",pergunta:"Totem: fixação mecânica está firme?",tipo:"sim_nao"},
+{id:"r20",pergunta:"Totem: foi identificado reaperto necessário?",tipo:"sim_nao"},
+{id:"r21",pergunta:"Quadro elétrico: inspeção visual das fixações e componentes está satisfatória?",tipo:"sim_nao"},
+{id:"r22",pergunta:"Foi realizado algum reaperto autorizado no quadro elétrico?",tipo:"sim_nao",ajuda:"Executar somente com procedimento, autorização e condições de segurança aplicáveis."}]}]}
+};
+let DADOS_FORMULARIOS=JSON.parse(localStorage.getItem("formularios_customizados")||"null");
+if(!DADOS_FORMULARIOS){DADOS_FORMULARIOS=JSON.parse(JSON.stringify(FORMULARIOS_PADRAO));localStorage.setItem("formularios_customizados",JSON.stringify(DADOS_FORMULARIOS));}
+else{
+ // Migração conservadora: preserva os formulários customizados existentes e atualiza apenas a estrutura padrão na versão nova.
+ Object.keys(FORMULARIOS_PADRAO).forEach(k=>{if(!DADOS_FORMULARIOS[k])DADOS_FORMULARIOS[k]=JSON.parse(JSON.stringify(FORMULARIOS_PADRAO[k]));});
+ // Os novos textos e itens passam a ser o padrão da versão 7.0; cópias personalizadas permanecem disponíveis no armazenamento.
+ if(localStorage.getItem("versao_formulario")!==versaoAtual){
+   try{localStorage.setItem("formularios_backup_antes_v7",JSON.stringify(DADOS_FORMULARIOS));}catch(e){}
+   Object.keys(FORMULARIOS_PADRAO).forEach(k=>{
+     const antigo=DADOS_FORMULARIOS[k];
+     if(antigo && antigo.secoes && antigo.secoes.some(s=>s.personalizado===true)) return;
+     DADOS_FORMULARIOS[k]=JSON.parse(JSON.stringify(FORMULARIOS_PADRAO[k]));
+   });
+   localStorage.setItem("formularios_customizados",JSON.stringify(DADOS_FORMULARIOS));
+   localStorage.setItem("versao_formulario",versaoAtual);
+ }
+}
+let FORMULARIO_ATUAL=null,RESPOSTAS={},MODELOS_LAMPADAS=[
+{id:"m1200",nome:"18W — 1200 mm",ativo:false},{id:"m600",nome:"9W — 600 mm",ativo:false},{id:"me27",nome:"E27 (rosca)",ativo:false}
+];
+const $=id=>document.getElementById(id);
+function lerHistorico(){try{return JSON.parse(localStorage.getItem("historico")||"[]")}catch(e){return[]}}
+function iniciarFormulario(tipo){
+ FORMULARIO_ATUAL=DADOS_FORMULARIOS[tipo]||FORMULARIOS_PADRAO[tipo];RESPOSTAS={};MODELOS_LAMPADAS.forEach(m=>m.ativo=false);
+ $("tela-inicial").classList.add("escondido");$("tela-formulario").classList.remove("escondido");
+ $("badge-tipo").textContent=FORMULARIO_ATUAL.titulo;$("badge-tipo").style.background=FORMULARIO_ATUAL.cor;
+ $("data").value=new Date().toLocaleDateString("en-CA");["local","tecnico","chapa","cft-crea","pendencias","contramedidas"].forEach(id=>$(id).value="");
+ $("status-final").value="Concluída sem pendências";montarSecoes();window.scrollTo(0,0);
+}
+function voltarInicio(){if(confirm("Deseja sair? Os dados ainda não salvos serão perdidos.")){$("tela-formulario").classList.add("escondido");$("tela-inicial").classList.remove("escondido");}}
+function salvarResp(id,valor){RESPOSTAS[id]={...(RESPOSTAS[id]||{}),valor};}
+function salvarCrit(id,crit,btn){btn.parentElement.querySelectorAll("button").forEach(b=>b.classList.remove("ativo"));btn.classList.add("ativo");RESPOSTAS[id]={...(RESPOSTAS[id]||{}),criticidade:crit};}
+function comprimirImagem(file,maxWidth,callback){
+ const reader=new FileReader();reader.onload=e=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas");let w=img.width,h=img.height;if(w>maxWidth){h=Math.round(h*maxWidth/w);w=maxWidth;}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);callback(c.toDataURL("image/jpeg",.68));};img.src=e.target.result;};reader.readAsDataURL(file);
+}
+function criticidadeAutomatica(queimadas,defeitos){
+ if(Number(queimadas)>0)return"alta";if(Number(defeitos)>0)return"baixa";return"operando";
+}
+function renderizarModelosLampadas(container){
+ container.innerHTML="";
+ MODELOS_LAMPADAS.forEach(m=>{
+  const box=document.createElement("div");box.className="modelo-lampada";
+  const head=document.createElement("label");head.className="modelo-header "+(m.ativo?"ativo":"");
+  head.innerHTML=`<input type="checkbox" ${m.ativo?"checked":""}><span>${escapar(m.nome)}</span>`;
+  const body=document.createElement("div");body.className="modelo-body "+(m.ativo?"ativo":"");
+  const q=RESPOSTAS[`qtde_${m.id}`]?.valor??"",b=RESPOSTAS[`queim_${m.id}`]?.valor??"",d=RESPOSTAS[`defeito_${m.id}`]?.valor??"";
+  body.innerHTML=`<div class="grid-3"><label>Instaladas<input type="number" min="0" step="1" value="${q}" placeholder="0" data-campo="qtde"></label><label>Queimadas<input type="number" min="0" step="1" value="${b}" placeholder="0" data-campo="queim"></label><label>Com defeito<input type="number" min="0" step="1" value="${d}" placeholder="0" data-campo="defeito"></label></div><div class="status-auto" aria-live="polite"></div><p class="item-ajuda">Criticidade automática: queimada = alta; com defeito = baixa; sem ocorrência = operando.</p>`;
+  const inputs=body.querySelectorAll("input");inputs.forEach(inp=>{inp.addEventListener("input",()=>{const key=inp.dataset.campo;const val=inp.value;if(val!==""&&Number(val)<0){inp.value=0;}salvarResp(`${key}_${m.id}`,inp.value);atualizarStatusModelo(m,body);});});
+  head.querySelector("input").addEventListener("change",e=>{m.ativo=e.target.checked;head.classList.toggle("ativo",m.ativo);body.classList.toggle("ativo",m.ativo);if(!m.ativo){["qtde","queim","defeito"].forEach(k=>delete RESPOSTAS[`${k}_${m.id}`]);}});
+  box.append(head,body);container.append(box);atualizarStatusModelo(m,body);
+ });
+ const add=document.createElement("button");add.className="btn-add-modelo";add.textContent="+ Adicionar modelo de lâmpada";add.onclick=()=>{const nome=prompt("Nome do modelo (ex.: refletor LED 50 W):");if(nome&&nome.trim()){const id="m_"+Date.now();MODELOS_LAMPADAS.push({id,nome:nome.trim(),ativo:true});renderizarModelosLampadas(container);}};container.append(add);
+}
+function atualizarStatusModelo(m,body){
+ const q=RESPOSTAS[`qtde_${m.id}`]?.valor||0,b=RESPOSTAS[`queim_${m.id}`]?.valor||0,d=RESPOSTAS[`defeito_${m.id}`]?.valor||0,area=body.querySelector(".status-auto");
+ const critQ=Number(b)>0,critD=Number(d)>0;
+ area.innerHTML=`<span class="status-chip ${critQ?"chip-alta":"chip-ok"}">Queimadas: ${critQ?"ALTA":"OPERANDO"}</span><span class="status-chip ${critD?"chip-baixa":"chip-ok"}">Defeitos: ${critD?"BAIXA":"OPERANDO"}</span>`;
+}
+function montarSecoes(){
+ const container=$("secoes-container");container.innerHTML="";
+ FORMULARIO_ATUAL.secoes.forEach(secao=>{
+  const s=document.createElement("section");s.className="secao";const h=document.createElement("h3");h.textContent=secao.titulo;s.append(h);
+  if(secao.tipo_especial==="modelos_lampadas"){const wrap=document.createElement("div");s.append(wrap);renderizarModelosLampadas(wrap);container.append(s);return;}
+  secao.itens.forEach(item=>{
+   const div=document.createElement("div");div.className="item";const p=document.createElement("div");p.className="item-pergunta";p.textContent=item.pergunta;div.append(p);
+   if(item.ajuda){const a=document.createElement("div");a.className="item-ajuda";a.textContent=item.ajuda;div.append(a);}
+   const r=RESPOSTAS[item.id]||{};
+   if(item.tipo==="numero"){const input=document.createElement("input");input.type="number";input.min="0";input.step="1";input.placeholder="Informe a quantidade";input.value=r.valor??"";input.addEventListener("input",e=>{if(Number(e.target.value)<0)e.target.value=0;salvarResp(item.id,e.target.value);});div.append(input);}
+   else{
+    const ops=document.createElement("div");ops.className="opcoes-resposta";
+    ["Sim","Não"].forEach(op=>{const b=document.createElement("button");b.type="button";b.textContent=op;if(r.resposta===op)b.classList.add(op==="Sim"?"ativo-sim":"ativo-nao");b.onclick=()=>{ops.querySelectorAll("button").forEach(x=>x.classList.remove("ativo-sim","ativo-nao"));b.classList.add(op==="Sim"?"ativo-sim":"ativo-nao");RESPOSTAS[item.id]={...(RESPOSTAS[item.id]||{}),resposta:op};};ops.append(b);});div.append(ops);
+   }
+   if(!item.sem_critica){const label=document.createElement("div");label.className="criticidade-label";label.textContent="Criticidade avaliada pelo técnico *";div.append(label);const cr=document.createElement("div");cr.className="criticidades";
+    [["alta","🔴 Alta"],["baixa","🟡 Baixa"],["operando","🔵 Operando"]].forEach(([key,txt])=>{const b=document.createElement("button");b.type="button";b.dataset.crit=key;b.textContent=txt;if(r.criticidade===key)b.classList.add("ativo");b.onclick=()=>salvarCrit(item.id,key,b);cr.append(b);});div.append(cr);
+   }
+   const obs=document.createElement("textarea");obs.placeholder="Observações: identifique o equipamento, localização, sintoma ou código de falha quando aplicável.";obs.value=r.observacao||"";obs.addEventListener("input",e=>{RESPOSTAS[item.id]={...(RESPOSTAS[item.id]||{}),observacao:e.target.value};});div.append(obs);
+   const fotos=document.createElement("div");fotos.className="foto-area";
+   (r.fotos||[]).forEach(f=>adicionarPreview(fotos,item.id,f));
+   const lab=document.createElement("label");lab.textContent="📷 Anexar foto";const file=document.createElement("input");file.type="file";file.accept="image/*";file.multiple=true;file.onchange=e=>Array.from(e.target.files).forEach(f=>comprimirImagem(f,850,b64=>{RESPOSTAS[item.id]={...(RESPOSTAS[item.id]||{}),fotos:[...(RESPOSTAS[item.id]?.fotos||[]),b64]};adicionarPreview(fotos,item.id,b64,lab);}));lab.append(file);fotos.append(lab);div.append(fotos);s.append(div);
+  });container.append(s);
+ });
+}
+function adicionarPreview(area,id,b64,antes){const p=document.createElement("div");p.className="foto-preview";const img=document.createElement("img");img.src=b64;const btn=document.createElement("button");btn.type="button";btn.textContent="×";btn.onclick=()=>{const arr=RESPOSTAS[id]?.fotos||[];const i=arr.indexOf(b64);if(i>=0)arr.splice(i,1);p.remove();};p.append(img,btn);area.insertBefore(p,antes||area.lastChild);}
+function escapar(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function gerarNumeroRelatorio(){const ano=new Date().getFullYear(),chave=`contador_${ano}`;let n=parseInt(localStorage.getItem(chave)||"0",10)+1;localStorage.setItem(chave,String(n));return`PREV-${ano}-${String(n).padStart(4,"0")}`;}
+function validarFormulario(){
+ const obrig=["local","tecnico","chapa","cft-crea","data"];for(const id of obrig){if(!$(id).value.trim()){alert("Preencha todos os campos obrigatórios da identificação.");$(id).focus();return false;}}
+ for(const s of FORMULARIO_ATUAL.secoes){if(s.tipo_especial==="modelos_lampadas"){
+  for(const m of MODELOS_LAMPADAS.filter(x=>x.ativo)){const q=RESPOSTAS[`qtde_${m.id}`]?.valor,b=RESPOSTAS[`queim_${m.id}`]?.valor,d=RESPOSTAS[`defeito_${m.id}`]?.valor;if(q===""||q==null){alert(`Informe a quantidade instalada do modelo ${m.nome}.`);return false;}if([b,d].some(x=>x===""||x==null)){alert(`Informe as quantidades queimadas e com defeito do modelo ${m.nome}. Use zero quando não houver ocorrência.`);return false;}if(Number(b)+Number(d)>Number(q)){alert(`No modelo ${m.nome}, a soma de queimadas e defeituosas não pode superar a quantidade instalada.`);return false;}}
+  }else for(const it of s.itens){const r=RESPOSTAS[it.id]||{};if(it.tipo==="numero"&&r.valor!==undefined&&Number(r.valor)<0){alert("As quantidades não podem ser negativas.");return false;}if(it.tipo==="sim_nao"&&!r.resposta){alert(`Responda ao item: ${it.pergunta}`);return false;}if(!it.sem_critica&&!r.criticidade){alert(`Selecione a criticidade avaliada pelo técnico: ${it.pergunta}`);return false;}}
+ }
+ if(FORMULARIO_ATUAL.id==="luminotecnico"){
+  const total=Number(RESPOSTAS.q_total_geral?.valor||0),soma=MODELOS_LAMPADAS.filter(m=>m.ativo).reduce((a,m)=>a+Number(RESPOSTAS[`qtde_${m.id}`]?.valor||0),0);
+  if(MODELOS_LAMPADAS.some(m=>m.ativo)&&total!==soma){if(!confirm(`Atenção: o total geral informado (${total}) é diferente da soma dos modelos selecionados (${soma}). Deseja gerar mesmo assim?`))return false;}
+ }
+ return true;
+}
+function finalizar(){
+ if(!validarFormulario())return;
+ if(!window.jspdf){alert("Não foi possível carregar a biblioteca de PDF. Verifique sua conexão e tente novamente.");return;}
+ const cabecalho={local:$("local").value.trim(),tecnico:$("tecnico").value.trim(),chapa:$("chapa").value.trim(),cftCrea:$("cft-crea").value.trim(),data:$("data").value};
+ const modelos=MODELOS_LAMPADAS.filter(m=>m.ativo).map(m=>({id:m.id,nome:m.nome,quantidade:RESPOSTAS[`qtde_${m.id}`]?.valor||"0",queimadas:RESPOSTAS[`queim_${m.id}`]?.valor||"0",defeito:RESPOSTAS[`defeito_${m.id}`]?.valor||"0",critQueimadas:criticidadeAutomatica(RESPOSTAS[`queim_${m.id}`]?.valor,0),critDefeito:criticidadeAutomatica(0,RESPOSTAS[`defeito_${m.id}`]?.valor)}));
+ const rel={numero:gerarNumeroRelatorio(),tipo:FORMULARIO_ATUAL.id,titulo:FORMULARIO_ATUAL.titulo,cabecalho,secoes:JSON.parse(JSON.stringify(FORMULARIO_ATUAL.secoes)),respostas:JSON.parse(JSON.stringify(RESPOSTAS)),modelos_lampadas:modelos,statusFinal:$("status-final").value,pendencias:$("pendencias").value.trim(),contramedidas:$("contramedidas").value.trim(),geradoEm:new Date().toISOString()};
+ const hist=lerHistorico();const anteriores=hist.filter(x=>x.tipo===rel.tipo&&normalizar(x.cabecalho?.local)===normalizar(rel.cabecalho.local)).slice(0,3);
+ rel.comparativo=construirComparativo(rel,anteriores);hist.unshift(rel);
+ try{localStorage.setItem("historico",JSON.stringify(hist));}catch(e){alert("O armazenamento do navegador está cheio. Exclua relatórios antigos ou reduza a quantidade de fotos antes de continuar. O relatório não foi salvo.");return;}
+ gerarPDF(rel);alert("Relatório gerado e salvo no histórico. O PDF inclui a comparação com até três inspeções anteriores do mesmo local e tipo.");$("tela-formulario").classList.add("escondido");$("tela-inicial").classList.remove("escondido");
+}
+function normalizar(s){return String(s||"").trim().toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ");}
+function mapaItens(rel){
+ const out={};
+ (rel.secoes||[]).forEach(s=>(s.itens||[]).forEach(it=>{
+  const r=rel.respostas?.[it.id]||{};
+  out[it.id]={pergunta:it.pergunta,resposta:r.resposta??r.valor??"",criticidade:r.criticidade||"",observacao:r.observacao||"",tipo:it.tipo};
+ }));
+ (rel.modelos_lampadas||[]).forEach(m=>{
+  const chave=normalizar(m.nome);
+  out[`lamp_${chave}_queimadas`]={pergunta:`${m.nome} — queimadas`,resposta:String(m.queimadas||0),criticidade:Number(m.queimadas)>0?"alta":"operando",tipo:"quantidade"};
+  out[`lamp_${chave}_defeito`]={pergunta:`${m.nome} — com defeito`,resposta:String(m.defeito||0),criticidade:Number(m.defeito)>0?"baixa":"operando",tipo:"quantidade"};
+ });
+ return out;
+}
+function itemEstaComProblema(x){
+ if(!x)return false;
+ if(x.tipo==="quantidade")return Number(x.resposta)>0;
+ if(x.tipo==="numero"){
+  const q=normalizar(x.pergunta);
+  const indicador=/queimad|defeit|inoperant|falha|avaria|danificad|pendencia/.test(q);
+  return indicador&&Number(x.resposta)>0;
+ }
+ const q=normalizar(x.pergunta);
+ // Perguntas formuladas como existência de falha/anomalia: "Sim" representa ocorrência.
+ const simIndicaFalha=/\\b(ha|existe|apresenta|apresentando|possui|foi identificad[oa]|foi necessaria|necessario|necessidade de|sinais de|cheiro de|algum equipamento desligado|algo quebrado|algo faltando|algo nao identificado)\\b/.test(q);
+ if(x.resposta==="Sim")return simIndicaFalha;
+ if(x.resposta==="Não")return !simIndicaFalha;
+ return x.criticidade==="alta"||x.criticidade==="baixa";
+}
+function construirComparativo(atual,anteriores){
+ const agora=mapaItens(atual),melhorou=[],piorou=[],permanece=[],novos=[];
+ if(!anteriores.length)return{quantidade:0,anteriores:[],melhorou,piorou,permanece,novos};
+ // Compara com a inspeção mais recente; o quadro de referência lista até as três anteriores.
+ const anterior=mapaItens(anteriores[0]);
+ Object.keys(agora).forEach(k=>{
+  const a=agora[k],p=anterior[k];if(!p)return;
+  const antesRuim=itemEstaComProblema(p),agoraRuim=itemEstaComProblema(a);
+  if(antesRuim&&!agoraRuim)melhorou.push({item:a.pergunta,antes:resumoEstado(p),agora:resumoEstado(a)});
+  else if(!antesRuim&&agoraRuim)piorou.push({item:a.pergunta,antes:resumoEstado(p),agora:resumoEstado(a)});
+  else if(antesRuim&&agoraRuim)permanece.push({item:a.pergunta,antes:resumoEstado(p),agora:resumoEstado(a)});
+ });
+ Object.keys(agora).filter(k=>!anterior[k]&&itemEstaComProblema(agora[k])).forEach(k=>novos.push({item:agora[k].pergunta,agora:resumoEstado(agora[k])}));
+ return{quantidade:anteriores.length,anteriores:anteriores.map(x=>({numero:x.numero,data:x.cabecalho.data,geradoEm:x.geradoEm})),melhorou,piorou,permanece,novos};
+}
+function resumoEstado(x){return `${x.resposta!==""?x.resposta:"Sem resposta"}${x.criticidade?` / ${x.criticidade.toUpperCase()}`:""}`;}
+function gerarPDF(rel){
+ const{jsPDF}=window.jspdf,doc=new jsPDF("p","mm","a4"),M=15,W=180;let y=20;
+ const cores={alta:[220,38,38],baixa:[217,119,6],operando:[37,99,235]},nomes={alta:"ALTA",baixa:"BAIXA",operando:"OPERANDO"};
+ function pagina(altura=10){if(y+altura>276){doc.addPage();y=18;}}
+ function texto(txt,x=M,max=W,size=9,cor=[20,20,20],bold=false){doc.setFont("helvetica",bold?"bold":"normal");doc.setFontSize(size);doc.setTextColor(...cor);const linhas=doc.splitTextToSize(String(txt??"—"),max);pagina(linhas.length*4.2+2);doc.text(linhas,x,y);y+=linhas.length*4.2;}
+ function titulo(txt){pagina(13);doc.setFillColor(243,246,249);doc.roundedRect(M,y-5,W,8,1,1,"F");doc.setFont("helvetica","bold");doc.setFontSize(10);doc.setTextColor(31,41,55);doc.text(txt,M+3,y);y+=8;}
+ doc.setFillColor(31,41,55);doc.rect(0,0,210,31,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(14);doc.text(rel.titulo,M,12);doc.setFont("helvetica","normal");doc.setFontSize(9);doc.text(`Relatório ${rel.numero}`,M,20);doc.text("REGISTRO DE MANUTENÇÃO PREVENTIVA",M,26);
+ y=40;texto(`Local: ${rel.cabecalho.local}`,M,W,10,[0,0,0],true);texto(`Técnico: ${rel.cabecalho.tecnico}  |  Chapa: ${rel.cabecalho.chapa}`);texto(`CFT/CREA: ${rel.cabecalho.cftCrea}  |  Data: ${formatarData(rel.cabecalho.data)}`);y+=3;
+ (rel.secoes||[]).forEach(sec=>{
+  titulo(sec.titulo);
+  if(sec.tipo_especial==="modelos_lampadas"){
+   const total=Number(rel.respostas?.q_total_geral?.valor||0);texto(`Total geral informado no local: ${total} lâmpada(s).`,M,W,9,[31,41,55],true);
+   if(!(rel.modelos_lampadas||[]).length)texto("Nenhum modelo de lâmpada foi discriminado.");
+   (rel.modelos_lampadas||[]).forEach(m=>{texto(`${m.nome}: ${m.quantidade} instalada(s) | ${m.queimadas} queimada(s) — ${nomes[m.critQueimadas]} | ${m.defeito} com defeito — ${nomes[m.critDefeito]}`,M+2,W-2);});
+   const soma=(rel.modelos_lampadas||[]).reduce((a,m)=>a+Number(m.quantidade||0),0);texto(`Soma dos modelos discriminados: ${soma}`,M,W,8,[100,100,100]);y+=2;return;
+  }
+  (sec.itens||[]).forEach(it=>{
+   const r=rel.respostas?.[it.id]||{},res=it.tipo==="numero"?(r.valor??"Não informado"):(r.resposta||"Não informado");
+   const linha=`${it.pergunta} — ${res}${!it.sem_critica&&r.criticidade?` | Criticidade: ${nomes[r.criticidade]||r.criticidade.toUpperCase()}`:""}`;
+   texto(linha,M,W,8.5,[20,20,20],true);
+   if(r.observacao)texto(`Observação: ${r.observacao}`,M+3,W-3,8,[90,90,90]);
+   if(r.fotos?.length){let x=M;const iw=27,ih=22;r.fotos.forEach(f=>{if(x+iw>195){y+=ih+3;x=M;}pagina(ih+3);try{doc.addImage(f,"JPEG",x,y,iw,ih);}catch(e){}x+=iw+4;});y+=ih+4;}
+  });y+=3;
+ });
+ titulo("ENCERRAMENTO DA ATIVIDADE");texto(`Status: ${rel.statusFinal||"Não informado"}`,M,W,9,[31,41,55],true);
+ if(rel.pendencias)texto(`Pendências e recomendações: ${rel.pendencias}`);
+ if(rel.contramedidas)texto(`Contramedidas adotadas: ${rel.contramedidas}`);
+ titulo("COMPARATIVO COM INSPEÇÕES ANTERIORES");
+ const c=rel.comparativo||{quantidade:0};
+ if(!c.quantidade)texto("Este é o primeiro relatório registrado para este local e tipo de preventiva. Ainda não há inspeções anteriores para comparação.");
+ else{
+  texto(`Comparação direta com a inspeção mais recente; janela histórica consultada: ${c.quantidade} inspeção(ões) anterior(es), limitada às três últimas.`,M,W,8,[80,80,80]);
+  (c.anteriores||[]).forEach(a=>texto(`Histórico consultado: ${a.numero} — ${formatarData(a.data)}`,M+2,W-2,8,[80,80,80]));
+  const grupo=(nome,arr,cor)=>{titulo(`${nome} (${arr.length})`);if(!arr.length){texto("Nenhuma alteração identificada.");return;}arr.forEach(x=>texto(`${x.item}: ${x.antes?x.antes+" → ":""}${x.agora||""}`,M+2,W-2,8,cor));};
+  grupo("MELHORIAS IDENTIFICADAS",c.melhorou||[],[5,120,75]);grupo("NOVAS OCORRÊNCIAS / PIORAS",c.piorou||[],[190,35,35]);grupo("OCORRÊNCIAS QUE PERMANECEM",c.permanece||[],[180,110,0]);grupo("ITENS NOVOS COM OCORRÊNCIA",c.novos||[],[190,35,35]);
+  texto("Nota: a comparação automática considera as respostas e criticidades registradas. Para confirmar a resolução de uma ocorrência, mantenha a identificação do equipamento e a descrição nas observações.",M,W,7.5,[100,100,100]);
+ }
+ pagina(24);y+=3;doc.setDrawColor(210);doc.line(M,y,195,y);y+=7;doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(60,60,60);doc.text("LEGENDA DE CRITICIDADE",M,y);y+=5;
+ [["alta","ALTA — condição crítica / inoperante"],["baixa","BAIXA — anomalia ou defeito de menor criticidade"],["operando","OPERANDO — condição normal"]].forEach(([k,t])=>{doc.setFillColor(...cores[k]);doc.circle(M+2,y-1,1.8,"F");doc.setFont("helvetica","normal");doc.setFontSize(7.5);doc.setTextColor(70,70,70);doc.text(t,M+7,y);y+=4.5;});
+ const paginas=doc.getNumberOfPages();for(let i=1;i<=paginas;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(130);doc.text(`${rel.numero}  |  Página ${i}/${paginas}`,195,289,{align:"right"});}
+ doc.save(`${rel.numero}.pdf`);
+}
+function formatarData(d){if(!d)return"—";const p=String(d).split("-");return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d;}
+function abrirHistorico(){renderizarHistorico();$("modal-historico").classList.remove("escondido");$("input-busca").value="";}
+function fecharHistorico(){$("modal-historico").classList.add("escondido");}
+function renderizarHistorico(listaDados){const hist=lerHistorico(),lista=$("lista-historico");lista.innerHTML="";const dados=listaDados||hist;if(!dados.length){lista.innerHTML='<p class="sem-resultado">Nenhum relatório encontrado.</p>';return;}dados.forEach(rel=>{const idx=hist.findIndex(x=>x.numero===rel.numero),div=document.createElement("div");div.className="hist-item";const info=document.createElement("div");info.className="hist-info";const strong=document.createElement("strong");strong.textContent=`${rel.numero} — ${rel.titulo}`;const span=document.createElement("span");span.textContent=`${rel.cabecalho?.local||"Local não informado"} • ${formatarData(rel.cabecalho?.data)}`;info.append(strong,span);const actions=document.createElement("div");actions.className="hist-botoes";const baixar=document.createElement("button");baixar.className="btn-ver";baixar.textContent="PDF";baixar.onclick=()=>baixarPdfHistorico(idx);const apagar=document.createElement("button");apagar.className="btn-del";apagar.textContent="Excluir";apagar.onclick=()=>apagarHistorico(idx);actions.append(baixar,apagar);div.append(info,actions);lista.append(div);});}
+function filtrarHistorico(){const termo=normalizar($("input-busca").value),hist=lerHistorico();renderizarHistorico(hist.filter(r=>normalizar(`${r.cabecalho?.local} ${r.numero} ${r.titulo}`).includes(termo)));}
+function apagarHistorico(index){if(!confirm("Excluir definitivamente este relatório do histórico deste navegador?"))return;const h=lerHistorico();h.splice(index,1);localStorage.setItem("historico",JSON.stringify(h));filtrarHistorico();}
+function baixarPdfHistorico(index){const r=lerHistorico()[index];if(r)gerarPDF(r);}
+</script>
 </body>
 </html>
