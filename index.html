@@ -12,7 +12,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #111827; min-height: 100vh; }
     
-    /* Tela inicial */
     .app-header { background: #1f2937; color: #fff; padding: 24px 20px; text-align: center; }
     .app-header h1 { font-size: 1.4rem; margin-bottom: 4px; }
     .app-header p { font-size: 0.9rem; opacity: 0.8; }
@@ -24,7 +23,6 @@
     .app-footer { display: flex; justify-content: center; gap: 24px; padding: 20px; }
     .footer-link { color: #6b7280; text-decoration: none; font-size: 0.9rem; }
 
-    /* Formulário */
     .form-header { padding: 16px; text-align: center; color: #fff; background: #1f2937; position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; }
     .btn-voltar-topo { background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 1.2rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .badge-tipo { display: inline-block; padding: 10px 20px; border-radius: 999px; color: #fff; font-weight: 700; font-size: 0.95rem; text-align: center; flex: 1; margin: 0 10px; }
@@ -67,7 +65,6 @@
     .btn-secundario { background: #e5e7eb; color: #374151; }
     .escondido { display: none !important; }
 
-    /* Modal / Histórico */
     .modal-bg { position: fixed; top:0; left:0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 100; }
     .modal-box { background: #fff; padding: 20px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; display: flex; flex-direction: column; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -85,7 +82,6 @@
     .btn-del { background: #ef4444; color: #fff; }
     .sem-resultado { text-align:center; color:#6b7280; margin: 20px 0; }
 
-    /* Estilos novos para os modelos de lâmpadas */
     .modelo-lampada { border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
     .modelo-header { display: flex; align-items: center; padding: 12px; background: #f9fafb; cursor: pointer; border-bottom: 1px solid transparent; }
     .modelo-header.ativo { background: #f0fdf4; border-bottom-color: #e5e7eb; }
@@ -98,7 +94,6 @@
 </head>
 <body>
 
-  <!-- TELA INICIAL -->
   <div id="tela-inicial">
     <header class="app-header">
       <h1>Manutenção Preventiva</h1>
@@ -124,7 +119,6 @@
     </footer>
   </div>
 
-  <!-- TELA DO FORMULÁRIO -->
   <div id="tela-formulario" class="escondido">
     <header class="form-header">
       <button class="btn-voltar-topo" onclick="voltarInicio()" title="Voltar">←</button>
@@ -143,7 +137,6 @@
         <label>Data *<input type="date" id="data" required></label>
       </section>
       
-      <!-- AQUI É ONDE O FORMULÁRIO É MONTADO -->
       <section id="secoes-container"></section>
       
       <div class="acoes-finais">
@@ -153,7 +146,6 @@
     </main>
   </div>
 
-  <!-- MODAL DO HISTÓRICO -->
   <div id="modal-historico" class="modal-bg escondido">
     <div class="modal-box">
       <div class="modal-header">
@@ -167,7 +159,7 @@
   </div>
 
   <script>
-    const versaoAtual = "4.0"; // Mudei a versão para forçar a atualização
+    const versaoAtual = "5.0"; // Atualizado para forçar a limpeza da memória antiga
     let DADOS_FORMULARIOS = JSON.parse(localStorage.getItem('formularios_customizados'));
     
     if (!DADOS_FORMULARIOS || localStorage.getItem('versao_formulario') !== versaoAtual) {
@@ -182,7 +174,7 @@
           id: "luminotecnico", titulo: "Preventiva Luminotécnica", cor: "#F59E0B",
           secoes: [
             { id: "lum_total", titulo: "Quantitativo de Lâmpadas", itens: [
-              { id: "q_total_geral", pergunta: "Total Geral de Lâmpadas na Estação", tipo: "numero", sem_critica: true }
+              { id: "q_total_geral", pergunta: "Total Geral de Lâmpadas no Local", tipo: "numero", sem_critica: true }
             ]},
             { id: "lum_modelos", titulo: "Modelos de Lâmpadas Instaladas", tipo_especial: "modelos_lampadas", itens: [] },
             { id: "lum_emergencia", titulo: "Luminárias de Emergência", itens: [
@@ -266,8 +258,6 @@
 
     let FORMULARIO_ATUAL = null;
     let RESPOSTAS = {};
-    
-    // Modelos de lâmpadas dinâmicos (Inicializa com o padrão, mas pode ser alterado pelo técnico)
     let MODELOS_LAMPADAS = [
       { id: "m1200", nome: "18W - 1200mm", ativo: false },
       { id: "m600", nome: "9W - 600mm", ativo: false },
@@ -277,7 +267,7 @@
     function iniciarFormulario(tipo) {
       FORMULARIO_ATUAL = DADOS_FORMULARIOS[tipo];
       RESPOSTAS = {};
-      MODELOS_LAMPADAS.forEach(m => m.ativo = false); // Reseta os modelos
+      MODELOS_LAMPADAS.forEach(m => m.ativo = false);
       
       document.getElementById('tela-inicial').classList.add('escondido');
       document.getElementById('tela-formulario').classList.remove('escondido');
@@ -326,7 +316,6 @@
       reader.readAsDataURL(file);
     }
 
-    // --- FUNÇÕES PARA O MODELO DINÂMICO DE LÂMPADAS ---
     function renderizarModelosLampadas(container) {
       container.innerHTML = '';
       
@@ -334,7 +323,6 @@
         const divModelo = document.createElement('div');
         divModelo.className = 'modelo-lampada';
         
-        // Header com Checkbox
         const header = document.createElement('div');
         header.className = `modelo-header ${modelo.ativo ? 'ativo' : ''}`;
         header.innerHTML = `
@@ -342,12 +330,10 @@
           <span>${modelo.nome}</span>
         `;
         
-        // Corpo que abre quando marca
         const body = document.createElement('div');
         body.className = `modelo-body ${modelo.ativo ? 'ativo' : ''}`;
         body.id = `body_${modelo.id}`;
         
-        // Se já tem respostas salvas pra esse modelo, preenche
         const respQtde = RESPOSTAS[`qtde_${modelo.id}`]?.valor || '';
         const respQueimadas = RESPOSTAS[`queim_${modelo.id}`]?.valor || '';
         const respDefeito = RESPOSTAS[`defeito_${modelo.id}`]?.valor || '';
@@ -371,7 +357,6 @@
           </div>
         `;
         
-        // Evento do checkbox
         header.querySelector('input').onchange = (e) => {
           modelo.ativo = e.target.checked;
           if (modelo.ativo) {
@@ -380,7 +365,6 @@
           } else {
             header.classList.remove('ativo');
             body.classList.remove('ativo');
-            // Limpa as respostas se desmarcar
             delete RESPOSTAS[`qtde_${modelo.id}`];
             delete RESPOSTAS[`queim_${modelo.id}`];
             delete RESPOSTAS[`defeito_${modelo.id}`];
@@ -393,7 +377,6 @@
         container.appendChild(divModelo);
       });
       
-      // Botão para adicionar novo modelo
       const btnAdd = document.createElement('button');
       btnAdd.className = 'btn-add-modelo';
       btnAdd.textContent = '+ Adicionar outro modelo (ex: Refletor)';
@@ -418,7 +401,6 @@
       RESPOSTAS[id] = { ...(RESPOSTAS[id] || {}), criticidade: crit };
     }
 
-    // --- MONTAGEM GERAL DO FORMULÁRIO ---
     function montarSecoes() {
       const container = document.getElementById('secoes-container');
       container.innerHTML = '';
@@ -428,16 +410,14 @@
         divSecao.className = 'secao';
         divSecao.innerHTML = `<h3>${secao.titulo}</h3>`;
         
-        // Se for a seção especial dos modelos de lâmpadas
         if (secao.tipo_especial === 'modelos_lampadas') {
           const divModelos = document.createElement('div');
           divSecao.appendChild(divModelos);
           renderizarModelosLampadas(divModelos);
           container.appendChild(divSecao);
-          return; // Pula o processamento normal
+          return; 
         }
 
-        // Processamento normal para as outras seções
         secao.itens.forEach(item => {
           const divItem = document.createElement('div');
           divItem.className = 'item';
@@ -601,7 +581,6 @@
         alert("Por favor, selecione o grau de criticidade nos itens que exigem avaliação antes de gerar o PDF."); return;
       }
 
-      // Organiza os dados dos modelos de lâmpadas para salvar
       const modelosSalvos = MODELOS_LAMPADAS.filter(m => m.ativo).map(m => ({
         nome: m.nome,
         quantidade: RESPOSTAS[`qtde_${m.id}`]?.valor || '0',
@@ -662,7 +641,6 @@
         
         doc.setFont(undefined, 'normal'); doc.setFontSize(9);
 
-        // Se for modelos de lâmpadas, imprime a lista
         if (secao.tipo_especial === 'modelos_lampadas') {
           if (rel.modelos_lampadas && rel.modelos_lampadas.length > 0) {
             rel.modelos_lampadas.forEach(mod => {
@@ -679,7 +657,7 @@
             doc.text("Nenhum modelo especificado.", margem + 6, y); y += 6;
           }
           y += 4;
-          return; // Pula a lógica de itens normais
+          return;
         }
 
         secao.itens.forEach(item => {
