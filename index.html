@@ -12,7 +12,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #111827; min-height: 100vh; }
     
-    /* Tela inicial */
     .app-header { background: #1f2937; color: #fff; padding: 24px 20px; text-align: center; }
     .app-header h1 { font-size: 1.4rem; margin-bottom: 4px; }
     .app-header p { font-size: 0.9rem; opacity: 0.8; }
@@ -24,10 +23,8 @@
     .app-footer { display: flex; justify-content: center; gap: 24px; padding: 20px; }
     .footer-link { color: #6b7280; text-decoration: none; font-size: 0.9rem; }
 
-    /* Formulário */
     .form-header { padding: 16px; text-align: center; color: #fff; background: #1f2937; position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; }
     .btn-voltar-topo { background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 1.2rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .btn-voltar-topo:active { background: rgba(255,255,255,0.4); }
     .badge-tipo { display: inline-block; padding: 10px 20px; border-radius: 999px; color: #fff; font-weight: 700; font-size: 0.95rem; text-align: center; flex: 1; margin: 0 10px; }
     .espaco-vazio { width: 40px; }
 
@@ -68,7 +65,6 @@
     .btn-secundario { background: #e5e7eb; color: #374151; }
     .escondido { display: none !important; }
 
-    /* Modal / Histórico */
     .modal-bg { position: fixed; top:0; left:0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 100; }
     .modal-box { background: #fff; padding: 20px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; display: flex; flex-direction: column; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -89,7 +85,6 @@
 </head>
 <body>
 
-  <!-- TELA INICIAL -->
   <div id="tela-inicial">
     <header class="app-header">
       <h1>Manutenção Preventiva</h1>
@@ -115,7 +110,6 @@
     </footer>
   </div>
 
-  <!-- TELA DO FORMULÁRIO -->
   <div id="tela-formulario" class="escondido">
     <header class="form-header">
       <button class="btn-voltar-topo" onclick="voltarInicio()" title="Voltar">←</button>
@@ -141,25 +135,29 @@
     </main>
   </div>
 
-  <!-- MODAL DO HISTÓRICO -->
   <div id="modal-historico" class="modal-bg escondido">
     <div class="modal-box">
       <div class="modal-header">
         <h3>Histórico</h3>
         <button onclick="fecharHistorico()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
       </div>
-      
       <input type="text" id="input-busca" class="search-box" placeholder="🔍 Buscar pelo nome do local..." oninput="filtrarHistorico()">
-      
       <div id="lista-historico" class="lista-historico-scroll"></div>
-      
       <button class="btn-secundario" style="width:100%; margin-top:16px;" onclick="fecharHistorico()">Fechar</button>
     </div>
   </div>
 
   <script>
+    // TRAVA DE SEGURANÇA: Se a versão salva for diferente da 3.0, ele apaga e força a nova
+    const versaoAtual = "3.0";
     let DADOS_FORMULARIOS = JSON.parse(localStorage.getItem('formularios_customizados'));
     
+    if (!DADOS_FORMULARIOS || localStorage.getItem('versao_formulario') !== versaoAtual) {
+      localStorage.removeItem('formularios_customizados');
+      localStorage.setItem('versao_formulario', versaoAtual);
+      DADOS_FORMULARIOS = null;
+    }
+
     if (!DADOS_FORMULARIOS) {
       DADOS_FORMULARIOS = {
         "luminotecnico": {
@@ -666,7 +664,6 @@
       if (rel) gerarPDF(rel);
     }
 
-    // FUNÇÃO DE BUSCA NO HISTÓRICO
     function filtrarHistorico() {
       const termo = document.getElementById('input-busca').value.toLowerCase();
       const hist = JSON.parse(localStorage.getItem('historico') || '[]');
