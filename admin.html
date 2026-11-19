@@ -20,11 +20,10 @@
     .secao-admin { margin-bottom: 24px; }
     .item-admin { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px; background: #f9fafb; }
     .item-admin input[type="text"] { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; }
-    .item-acoes { display: flex; gap: 8px; align-items: center; }
+    .item-acoes { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .item-acoes select { padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; }
     
     .btn-add { background: #10b981; color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 10px;}
-    .btn-edit { background: #3b82f6; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
     .btn-del { background: #ef4444; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
     .btn-emergencia { background: #dc2626; color: #fff; border: none; padding: 14px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 1rem; margin-top: 20px;}
     .btn-back { display: inline-block; margin-bottom: 20px; color: #3b82f6; text-decoration: none; font-weight: 600; }
@@ -50,12 +49,97 @@
   </div>
 
   <script>
+    // Inicia os formulários vazios se não existirem (para o Admin não quebrar)
     let DADOS = JSON.parse(localStorage.getItem('formularios_customizados'));
     
-    // Se não existir, carrega a versão mais recente do código
     if (!DADOS) {
-      alert("Nenhum dado no sistema ainda. Por favor, abra o App principal primeiro.");
-      window.location.href = 'index.html';
+      // Cópia exata do padrão do index.html para garantir que o Admin abra sempre
+      DADOS = {
+        "luminotecnico": {
+          id: "luminotecnico", titulo: "Preventiva Luminotécnica", cor: "#F59E0B",
+          secoes: [
+            { id: "lum_total", titulo: "Quantitativo de Lâmpadas", itens: [
+              { id: "q_total_geral", pergunta: "Total Geral de Lâmpadas no Local", tipo: "numero", sem_critica: true }
+            ]},
+            { id: "lum_modelos", titulo: "Modelos de Lâmpadas Instaladas", tipo_especial: "modelos_lampadas", itens: [] },
+            { id: "lum_emergencia", titulo: "Luminárias de Emergência", itens: [
+              { id: "l4", pergunta: "Total de luminárias de emergência", tipo: "numero", sem_critica: true },
+              { id: "l5", pergunta: "Total de luminárias de emergência queimadas", tipo: "numero" },
+              { id: "l6", pergunta: "Total de luminárias de emergência com defeito", tipo: "numero" },
+              { id: "l7", pergunta: "Foi adotada alguma contramedida?", tipo: "sim_nao", sem_critica: true }
+            ]}
+          ]
+        },
+        "inspecao_visual": {
+          id: "inspecao_visual", titulo: "Preventiva — Inspeção Visual", cor: "#3B82F6",
+          secoes: [
+            { id: "iv1", titulo: "Interfones", itens: [
+              { id: "i1", pergunta: "Estão operando os 4?", tipo: "sim_nao" },
+              { id: "i2", pergunta: "Estão danificados?", tipo: "sim_nao" },
+              { id: "i3", pergunta: "Estão sujos?", tipo: "sim_nao" }
+            ]},
+            { id: "iv2", titulo: "Botoeiras", itens: [
+              { id: "i4", pergunta: "Estão operacionais?", tipo: "sim_nao" },
+              { id: "i5", pergunta: "Estão danificadas?", tipo: "sim_nao" },
+              { id: "i6", pergunta: "Estão sujas?", tipo: "sim_nao" }
+            ]},
+            { id: "iv3", titulo: "PMVs", itens: [
+              { id: "i7", pergunta: "Estão operando em normalidade?", tipo: "sim_nao" },
+              { id: "i8", pergunta: "Estão danificados?", tipo: "sim_nao" },
+              { id: "i9", pergunta: "Estão sujos?", tipo: "sim_nao" }
+            ]},
+            { id: "iv4", titulo: "Eletroímã", itens: [
+              { id: "i10", pergunta: "Está operando em normalidade?", tipo: "sim_nao" },
+              { id: "i11", pergunta: "Está em funcionamento com status no HUB?", tipo: "sim_nao" }
+            ]},
+            { id: "iv5", titulo: "Alarme de incêndio", itens: [
+              { id: "i12", pergunta: "Está operando?", tipo: "sim_nao" },
+              { id: "i13", pergunta: "Está apresentando algum alerta no visor?", tipo: "sim_nao" }
+            ]},
+            { id: "iv6", titulo: "Rack", itens: [
+              { id: "i14", pergunta: "Possui algum equipamento desligado?", tipo: "sim_nao" },
+              { id: "i15", pergunta: "Possui algum cheiro de queimado?", tipo: "sim_nao" },
+              { id: "i16", pergunta: "Possui algum material estranho dentro do rack?", tipo: "sim_nao" },
+              { id: "i17", pergunta: "Possui algo quebrado?", tipo: "sim_nao" },
+              { id: "i18", pergunta: "Possui algo faltando?", tipo: "sim_nao" },
+              { id: "i19", pergunta: "Possui algo não identificado?", tipo: "sim_nao" }
+            ]}
+          ]
+        },
+        "lubrificacao_reapertos": {
+          id: "lubrificacao_reapertos", titulo: "Preventiva — Lubrificação e Reapertos", cor: "#10B981",
+          secoes: [
+            { id: "lr1", titulo: "Inspeção", itens: [
+              { id: "r1", pergunta: "Porta de acesso — visualmente OK?", tipo: "sim_nao" },
+              { id: "r2", pergunta: "Porta de acesso — abre/fecha via manual?", tipo: "sim_nao" },
+              { id: "r3", pergunta: "Porta de acesso — abre/fecha via remoto?", tipo: "sim_nao" },
+              { id: "r4", pergunta: "Porta de acesso — sinais de vandalismo?", tipo: "sim_nao" },
+              { id: "r5", pergunta: "Portas de embarque — abre/fecha via remoto?", tipo: "sim_nao" },
+              { id: "r6", pergunta: "Portas de embarque — abre/fecha sem alimentação?", tipo: "sim_nao" },
+              { id: "r7", pergunta: "Porta de emergência — sinais de vandalismo?", tipo: "sim_nao" },
+              { id: "r8", pergunta: "Porta de emergência — operando normalmente?", tipo: "sim_nao" },
+              { id: "r9", pergunta: "Catracas — PCD abre via comando?", tipo: "sim_nao" },
+              { id: "r10", pergunta: "Catracas — sinais de vandalismo?", tipo: "sim_nao" },
+              { id: "r11", pergunta: "Catracas — entrada/saída normal?", tipo: "sim_nao" }
+            ]},
+            { id: "lr2", titulo: "Limpeza Técnica", itens: [
+              { id: "r12", pergunta: "Porta principal — limpeza dos trilhos?", tipo: "sim_nao" },
+              { id: "r13", pergunta: "Porta principal — lubrificação dos trilhos?", tipo: "sim_nao" },
+              { id: "r14", pergunta: "Porta de embarque — supressão de resíduos?", tipo: "sim_nao" },
+              { id: "r15", pergunta: "Catracas — limpeza da graxa velha?", tipo: "sim_nao" },
+              { id: "r16", pergunta: "Catracas — nova lubrificação?", tipo: "sim_nao" }
+            ]},
+            { id: "lr3", titulo: "Reapertos", itens: [
+              { id: "r17", pergunta: "Catracas — boa fixação?", tipo: "sim_nao" },
+              { id: "r18", pergunta: "Catracas — necessário reaperto?", tipo: "sim_nao" },
+              { id: "r19", pergunta: "Totem — boa fixação?", tipo: "sim_nao" },
+              { id: "r20", pergunta: "Totem — necessário reaperto?", tipo: "sim_nao" },
+              { id: "r21", pergunta: "Realizado aperto no quadro elétrico?", tipo: "sim_nao" }
+            ]}
+          ]
+        }
+      };
+      localStorage.setItem('formularios_customizados', JSON.stringify(DADOS));
     }
 
     let tipoAtual = "luminotecnico";
@@ -78,6 +162,9 @@
       const form = DADOS[tipoAtual];
 
       form.secoes.forEach((secao, secIndex) => {
+        // Se for a seção de modelos de lâmpadas, não mostra no Admin (é dinâmica no app)
+        if (secao.tipo_especial === 'modelos_lampadas') return;
+
         const divSecao = document.createElement('div');
         divSecao.className = 'card secao-admin';
         divSecao.innerHTML = `<h2>${secao.titulo}</h2>`;
@@ -178,6 +265,7 @@
       }
     }
 
+    // Autenticação simples
     const senha = prompt("Digite a senha de administrador:");
     if (senha !== "577900") {
       document.body.innerHTML = "<h1 style='text-align:center; margin-top:50px; color:#ef4444;'>Acesso Negado</h1><p style='text-align:center;'><a href='index.html'>Voltar ao aplicativo</a></p>";
