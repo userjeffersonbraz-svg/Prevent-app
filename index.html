@@ -70,8 +70,12 @@
 
     /* Modal / Histórico */
     .modal-bg { position: fixed; top:0; left:0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 100; }
-    .modal-box { background: #fff; padding: 20px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
-    .modal-box h3 { margin-bottom: 16px; font-size: 1.2rem; }
+    .modal-box { background: #fff; padding: 20px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; display: flex; flex-direction: column; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .modal-header h3 { font-size: 1.2rem; }
+    .search-box { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; margin-bottom: 12px; }
+    
+    .lista-historico-scroll { overflow-y: auto; flex: 1; padding-right: 4px; }
     .hist-item { border-bottom: 1px solid #e5e7eb; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; }
     .hist-info { font-size: 0.9rem; }
     .hist-info strong { display: block; margin-bottom: 4px; font-size: 1rem; color: #111827; }
@@ -80,6 +84,7 @@
     .hist-botoes button { padding: 6px 10px; border-radius: 6px; border: none; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
     .btn-ver { background: #3b82f6; color: #fff; }
     .btn-del { background: #ef4444; color: #fff; }
+    .sem-resultado { text-align:center; color:#6b7280; margin: 20px 0; }
   </style>
 </head>
 <body>
@@ -139,36 +144,49 @@
   <!-- MODAL DO HISTÓRICO -->
   <div id="modal-historico" class="modal-bg escondido">
     <div class="modal-box">
-      <h3>Histórico de Relatórios</h3>
-      <div id="lista-historico"></div>
+      <div class="modal-header">
+        <h3>Histórico</h3>
+        <button onclick="fecharHistorico()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      
+      <input type="text" id="input-busca" class="search-box" placeholder="🔍 Buscar pelo nome do local..." oninput="filtrarHistorico()">
+      
+      <div id="lista-historico" class="lista-historico-scroll"></div>
+      
       <button class="btn-secundario" style="width:100%; margin-top:16px;" onclick="fecharHistorico()">Fechar</button>
     </div>
   </div>
 
   <script>
-    // --- INÍCIO DA CORREÇÃO: Forçar a atualização dos dados se a versão for antiga ---
     let DADOS_FORMULARIOS = JSON.parse(localStorage.getItem('formularios_customizados'));
-    const versaoAtual = "2.1"; 
     
-    // Se o formulário salvo não tiver a versão nova ou não tiver a pergunta do Rack, ele reseta.
-    if (!DADOS_FORMULARIOS || !DADOS_FORMULARIOS.inspecao_visual.secoes.find(s => s.id === 'iv6') || !DADOS_FORMULARIOS.lubrificacao_reapertos.secoes.find(s => s.itens.find(i => i.id === 'r21'))) {
-        DADOS_FORMULARIOS = null;
-        localStorage.removeItem('formularios_customizados');
-    }
-
     if (!DADOS_FORMULARIOS) {
       DADOS_FORMULARIOS = {
         "luminotecnico": {
           id: "luminotecnico", titulo: "Preventiva Luminotécnica", cor: "#F59E0B",
-          secoes: [{ id: "lum", titulo: "Luminotécnico", itens: [
-            { id: "l1", pergunta: "Total de lâmpadas", tipo: "numero", sem_critica: true },
-            { id: "l2", pergunta: "Total de lâmpadas queimadas", tipo: "numero" },
-            { id: "l3", pergunta: "Total de lâmpadas com defeito", tipo: "numero" },
-            { id: "l4", pergunta: "Total de luminárias de emergência", tipo: "numero", sem_critica: true },
-            { id: "l5", pergunta: "Total de luminárias de emergência queimadas", tipo: "numero" },
-            { id: "l6", pergunta: "Total de luminárias de emergência com defeito", tipo: "numero" },
-            { id: "l7", pergunta: "Foi adotada alguma contramedida?", tipo: "sim_nao", sem_critica: true }
-          ]}]
+          secoes: [
+            { id: "lum_total", titulo: "Quantitativo de Lâmpadas (Instaladas)", itens: [
+              { id: "q_total_1200", pergunta: "Quantas lâmpadas 18W - 1200mm (Total)?", tipo: "numero", sem_critica: true },
+              { id: "q_total_600", pergunta: "Quantas lâmpadas 9W - 600mm (Total)?", tipo: "numero", sem_critica: true },
+              { id: "q_total_e27", pergunta: "Quantas lâmpadas E27 (Rosca) (Total)?", tipo: "numero", sem_critica: true }
+            ]},
+            { id: "lum_queimadas", titulo: "Lâmpadas Queimadas (Para Troca)", itens: [
+              { id: "q_queim_1200", pergunta: "Quantas 18W - 1200mm queimadas?", tipo: "numero" },
+              { id: "q_queim_600", pergunta: "Quantas 9W - 600mm queimadas?", tipo: "numero" },
+              { id: "q_queim_e27", pergunta: "Quantas E27 (Rosca) queimadas?", tipo: "numero" }
+            ]},
+            { id: "lum_defeitos", titulo: "Lâmpadas com Defeito (Sujas, piscando, etc)", itens: [
+              { id: "q_def_1200", pergunta: "Quantas 18W - 1200mm com defeito?", tipo: "numero" },
+              { id: "q_def_600", pergunta: "Quantas 9W - 600mm com defeito?", tipo: "numero" },
+              { id: "q_def_e27", pergunta: "Quantas E27 (Rosca) com defeito?", tipo: "numero" }
+            ]},
+            { id: "lum_emergencia", titulo: "Luminárias de Emergência", itens: [
+              { id: "l4", pergunta: "Total de luminárias de emergência", tipo: "numero", sem_critica: true },
+              { id: "l5", pergunta: "Total de luminárias de emergência queimadas", tipo: "numero" },
+              { id: "l6", pergunta: "Total de luminárias de emergência com defeito", tipo: "numero" },
+              { id: "l7", pergunta: "Foi adotada alguma contramedida?", tipo: "sim_nao", sem_critica: true }
+            ]}
+          ]
         },
         "inspecao_visual": {
           id: "inspecao_visual", titulo: "Preventiva — Inspeção Visual", cor: "#3B82F6",
@@ -244,43 +262,6 @@
     let FORMULARIO_ATUAL = null;
     let RESPOSTAS = {};
 
-    // --- AUTO SAVE ---
-    function salvarRascunho() {
-      if(!FORMULARIO_ATUAL) return;
-      const cabecalho = {
-        local: document.getElementById('local').value,
-        tecnico: document.getElementById('tecnico').value,
-        chapa: document.getElementById('chapa').value,
-        cftCrea: document.getElementById('cft-crea').value,
-        data: document.getElementById('data').value
-      };
-      localStorage.setItem('rascunho_atual', JSON.stringify({
-        tipo: FORMULARIO_ATUAL.id,
-        cabecalho: cabecalho,
-        respostas: RESPOSTAS
-      }));
-    }
-
-    function checarRascunho(tipo) {
-      const rascunho = JSON.parse(localStorage.getItem('rascunho_atual'));
-      if (rascunho && rascunho.tipo === tipo) {
-        const continuar = confirm("Encontramos um preenchimento não finalizado deste formulário. Deseja continuar de onde parou?");
-        if (continuar) {
-          document.getElementById('local').value = rascunho.cabecalho.local || '';
-          document.getElementById('tecnico').value = rascunho.cabecalho.tecnico || '';
-          document.getElementById('chapa').value = rascunho.cabecalho.chapa || '';
-          document.getElementById('cft-crea').value = rascunho.cabecalho.cftCrea || '';
-          document.getElementById('data').value = rascunho.cabecalho.data || new Date().toISOString().split('T')[0];
-          RESPOSTAS = rascunho.respostas || {};
-          return true;
-        } else {
-          localStorage.removeItem('rascunho_atual');
-          RESPOSTAS = {};
-        }
-      }
-      return false;
-    }
-
     function iniciarFormulario(tipo) {
       FORMULARIO_ATUAL = DADOS_FORMULARIOS[tipo];
       RESPOSTAS = {};
@@ -291,22 +272,18 @@
       badge.textContent = FORMULARIO_ATUAL.titulo;
       badge.style.background = FORMULARIO_ATUAL.cor;
       
-      const temRascunho = checarRascunho(tipo);
-      if (!temRascunho) {
-        document.getElementById('data').value = new Date().toISOString().split('T')[0];
-        document.getElementById('local').value = '';
-        document.getElementById('tecnico').value = '';
-        document.getElementById('chapa').value = '';
-        document.getElementById('cft-crea').value = '';
-      }
+      document.getElementById('data').value = new Date().toISOString().split('T')[0];
+      document.getElementById('local').value = '';
+      document.getElementById('tecnico').value = '';
+      document.getElementById('chapa').value = '';
+      document.getElementById('cft-crea').value = '';
       
       montarSecoes();
       window.scrollTo(0,0);
     }
 
     function voltarInicio() {
-      if (confirm("Deseja sair? Suas respostas ficarão salvas como rascunho.")) {
-        salvarRascunho();
+      if (confirm("Deseja sair? Os dados não salvos serão perdidos.")) {
         document.getElementById('tela-formulario').classList.add('escondido');
         document.getElementById('tela-inicial').classList.remove('escondido');
       }
@@ -363,7 +340,6 @@
             input.value = respSalva.valor || '';
             input.oninput = (e) => {
               RESPOSTAS[item.id] = { ...(RESPOSTAS[item.id] || {}), valor: e.target.value };
-              salvarRascunho();
             };
             divItem.appendChild(input);
           } else {
@@ -387,7 +363,6 @@
                     RESPOSTAS[item.id].criticidade = 'operando';
                   }
                 }
-                salvarRascunho();
               };
               divOpcoes.appendChild(btn);
             });
@@ -408,7 +383,6 @@
                 divCrit.querySelectorAll('button').forEach(b => b.classList.remove('ativo'));
                 btn.classList.add('ativo');
                 RESPOSTAS[item.id] = { ...(RESPOSTAS[item.id] || {}), criticidade: btn.dataset.crit };
-                salvarRascunho();
               };
             });
             divItem.appendChild(divCrit);
@@ -417,7 +391,7 @@
           const obs = document.createElement('textarea');
           obs.placeholder = 'Observação (opcional)';
           obs.value = respSalva.observacao || '';
-          obs.oninput = (e) => { RESPOSTAS[item.id] = { ...(RESPOSTAS[item.id] || {}), observacao: e.target.value }; salvarRascunho(); };
+          obs.oninput = (e) => { RESPOSTAS[item.id] = { ...(RESPOSTAS[item.id] || {}), observacao: e.target.value }; };
           divItem.appendChild(obs);
 
           const divFoto = document.createElement('div');
@@ -432,7 +406,6 @@
                 const idx = RESPOSTAS[item.id].fotos.indexOf(fotoBase64);
                 if (idx >= 0) RESPOSTAS[item.id].fotos.splice(idx, 1);
                 prev.remove();
-                salvarRascunho();
               };
               divFoto.appendChild(prev);
             });
@@ -450,7 +423,6 @@
                 const fotos = RESPOSTAS[item.id]?.fotos || [];
                 fotos.push(base64Comprimida);
                 RESPOSTAS[item.id] = { ...(RESPOSTAS[item.id] || {}), fotos };
-                salvarRascunho();
                 
                 const prev = document.createElement('div');
                 prev.className = 'foto-preview';
@@ -459,7 +431,6 @@
                   const idx = RESPOSTAS[item.id].fotos.indexOf(base64Comprimida);
                   if (idx >= 0) RESPOSTAS[item.id].fotos.splice(idx, 1);
                   prev.remove();
-                  salvarRascunho();
                 };
                 divFoto.insertBefore(prev, labelFoto);
               });
@@ -518,8 +489,6 @@
       let historico = JSON.parse(localStorage.getItem('historico') || '[]');
       historico.unshift(relatorio);
       localStorage.setItem('historico', JSON.stringify(historico));
-      
-      localStorage.removeItem('rascunho_atual');
 
       gerarPDF(relatorio);
       
@@ -577,7 +546,7 @@
           let xResposta = xTexto + larguraPergunta;
           
           doc.setFont(undefined, 'bold');
-          const txtResp = item.tipo === 'numero' ? `R: ${resp.valor || '—'}` : `R: ${resp.resposta || '—'}`;
+          const txtResp = item.tipo === 'numero' ? `R: ${resp.valor || '0'}` : `R: ${resp.resposta || '—'}`;
           doc.text(txtResp, xResposta, y);
           
           const larguraResposta = doc.getTextWidth(txtResp);
@@ -653,17 +622,19 @@
       lista.innerHTML = '';
 
       if (hist.length === 0) {
-        lista.innerHTML = '<p style="text-align:center; color:#6b7280; margin: 20px 0;">Nenhum relatório finalizado ainda.</p>';
+        lista.innerHTML = '<p class="sem-resultado">Nenhum relatório finalizado ainda.</p>';
       } else {
         hist.forEach((rel, index) => {
           const div = document.createElement('div');
           div.className = 'hist-item';
           
           const dataFormatada = new Date(rel.geradoEm).toLocaleDateString('pt-BR');
+          const tipoLimpo = rel.titulo.replace('Preventiva — ', '').replace('Preventiva ', '');
+          
           div.innerHTML = `
             <div class="hist-info">
-              <strong>${rel.numero}</strong>
-              <span>${rel.titulo.replace('Preventiva — ', '').replace('Preventiva ', '')}<br>${rel.cabecalho.local} - ${dataFormatada}</span>
+              <strong>${rel.numero} - ${tipoLimpo}</strong>
+              <span>${rel.cabecalho.local} - ${dataFormatada}</span>
             </div>
             <div class="hist-botoes">
               <button class="btn-ver" onclick="baixarPdfHistorico(${index})">Baixar</button>
@@ -693,6 +664,44 @@
       const hist = JSON.parse(localStorage.getItem('historico') || '[]');
       const rel = hist[index];
       if (rel) gerarPDF(rel);
+    }
+
+    // FUNÇÃO DE BUSCA NO HISTÓRICO
+    function filtrarHistorico() {
+      const termo = document.getElementById('input-busca').value.toLowerCase();
+      const hist = JSON.parse(localStorage.getItem('historico') || '[]');
+      const lista = document.getElementById('lista-historico');
+      lista.innerHTML = '';
+
+      const filtrados = hist.filter(rel => 
+        rel.cabecalho.local.toLowerCase().includes(termo) || 
+        rel.numero.toLowerCase().includes(termo)
+      );
+
+      if (filtrados.length === 0) {
+        lista.innerHTML = '<p class="sem-resultado">Nenhum relatório encontrado para esta busca.</p>';
+      } else {
+        filtrados.forEach((rel) => {
+          const originalIndex = hist.findIndex(h => h.numero === rel.numero);
+          const div = document.createElement('div');
+          div.className = 'hist-item';
+          
+          const dataFormatada = new Date(rel.geradoEm).toLocaleDateString('pt-BR');
+          const tipoLimpo = rel.titulo.replace('Preventiva — ', '').replace('Preventiva ', '');
+          
+          div.innerHTML = `
+            <div class="hist-info">
+              <strong>${rel.numero} - ${tipoLimpo}</strong>
+              <span>${rel.cabecalho.local} - ${dataFormatada}</span>
+            </div>
+            <div class="hist-botoes">
+              <button class="btn-ver" onclick="baixarPdfHistorico(${originalIndex})">Baixar</button>
+              <button class="btn-del" onclick="apagarHistorico(${originalIndex})">X</button>
+            </div>
+          `;
+          lista.appendChild(div);
+        });
+      }
     }
   </script>
 </body>
