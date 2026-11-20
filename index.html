@@ -11,7 +11,7 @@
 <style>
 :root{--ink:#1f2937;--muted:#64748b;--line:#e5e7eb;--bg:#f3f4f6;--blue:#2563eb;--green:#059669;--red:#dc2626;--amber:#d97706}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:#111827;min-height:100vh}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:#111827;min-height:100vh;-webkit-text-size-adjust:100%}
 button,input,textarea,select{font:inherit}
 button{cursor:pointer}
 .app-header{background:var(--ink);color:#fff;padding:26px 20px;text-align:center}
@@ -30,13 +30,18 @@ button{cursor:pointer}
 .item{border-bottom:1px solid #f1f5f9;padding:14px 0}.item:last-child{border:0}.item-pergunta{font-weight:650;font-size:.95rem;margin-bottom:10px}
 .item-ajuda{font-size:.8rem;color:var(--muted);margin:-5px 0 10px}
 .opcoes-resposta{display:flex;gap:8px;margin-bottom:10px}.opcoes-resposta button{flex:1;padding:10px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;font-weight:650}
-.opcoes-resposta button.ativo-sim{background:#059669;color:#fff;border-color:#059669}.opcoes-resposta button.ativo-nao{background:#475569;color:#fff;border-color:#475569}
+.opcoes-resposta button.ativo-sim{background:#059669;color:#fff;border-color:#059669}
+.opcoes-resposta button.ativo-nao{background:#475569;color:#fff;border-color:#475569}
+.opcoes-resposta button.ativo-na{background:#94a3b8;color:#fff;border-color:#94a3b8}
 .item input[type=number],.item textarea,.item select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:.94rem;margin:0 0 10px;font-family:inherit}
 .item textarea{min-height:62px;resize:vertical}.criticidade-label{font-size:.8rem;color:var(--muted);margin:3px 0 6px}
 .criticidades{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
 .criticidades button{padding:10px 4px;border-radius:8px;border:2px solid var(--line);background:#fff;font-size:.82rem;font-weight:700}
-.criticidades button[data-crit=alta].ativo{background:#dc2626;color:#fff;border-color:#dc2626}.criticidades button[data-crit=baixa].ativo{background:#d97706;color:#fff;border-color:#d97706}.criticidades button[data-crit=operando].ativo{background:#2563eb;color:#fff;border-color:#2563eb}
-.foto-area{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.foto-area label{display:inline-block;padding:8px 13px;border-radius:8px;background:#e0e7ff;color:#3730a3;font-size:.84rem;cursor:pointer}.foto-area input{display:none}
+.criticidades button[data-crit=alta].ativo{background:#dc2626;color:#fff;border-color:#dc2626}
+.criticidades button[data-crit=baixa].ativo{background:#d97706;color:#fff;border-color:#d97706}
+.criticidades button[data-crit=operando].ativo{background:#2563eb;color:#fff;border-color:#2563eb}
+.foto-area{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.foto-area label{display:inline-block;padding:8px 13px;border-radius:8px;background:#e0e7ff;color:#3730a3;font-size:.84rem;cursor:pointer}
+.foto-area input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
 .foto-preview{position:relative;width:66px;height:66px;border-radius:8px;overflow:hidden;border:1px solid #cbd5e1}.foto-preview img{width:100%;height:100%;object-fit:cover}.foto-preview button{position:absolute;top:0;right:0;background:#000a;color:#fff;border:0;width:21px;height:21px}
 .acoes-finais{display:flex;gap:12px;margin:20px 0 40px}.btn-primario,.btn-secundario{flex:1;padding:14px;border-radius:10px;border:0;font-size:.96rem;font-weight:750}.btn-primario{background:var(--ink);color:#fff}.btn-secundario{background:#e2e8f0;color:#334155}
 .escondido{display:none!important}
@@ -60,7 +65,7 @@ button{cursor:pointer}
 <header class="app-header"><h1>Manutenção Preventiva</h1><p>Registros técnicos, acompanhamento e histórico de inspeções</p></header>
 <main class="home-grid">
 <button class="card" onclick="iniciarFormulario('luminotecnico')" style="--cor:#d97706"><span class="card-badge">Luminotécnica</span><span class="card-desc">Quantitativo de lâmpadas, luminárias e iluminação de emergência.</span></button>
-<button class="card" onclick="iniciarFormulario('inspecao_visual')" style="--cor:#2563eb"><span class="card-badge">Inspeção visual</span><span class="card-desc">Verificação de interfones, botoeiras, PMVs, eletroímãs, alarme de incêndio e rack.</span></button>
+<button class="card" onclick="iniciarFormulario('inspecao_visual')" style="--cor:#2563eb"><span class="card-badge">Inspeção visual</span><span class="card-desc">Verificação de interfones, botoeiras, PMV, eletroímãs, alarme de incêndio e rack.</span></button>
 <button class="card" onclick="iniciarFormulario('lubrificacao_reapertos')" style="--cor:#059669"><span class="card-badge">Lubrificação e reapertos</span><span class="card-desc">Inspeção funcional, limpeza técnica, lubrificação e fixações.</span></button>
 </main>
 <footer class="app-footer"><a href="#" class="footer-link" onclick="abrirHistorico();return false">📋 Histórico de relatórios</a><a href="admin.html" class="footer-link">⚙️ Administração</a></footer>
@@ -69,9 +74,16 @@ button{cursor:pointer}
 <header class="form-header"><button class="btn-voltar-topo" onclick="voltarInicio()" title="Voltar">←</button><div class="badge-tipo" id="badge-tipo">Preventiva</div><div class="espaco-vazio"></div></header>
 <main class="form-main">
 <section class="cabecalho"><h2>Identificação da inspeção</h2>
-<label>Local da inspeção *<input type="text" id="local" placeholder="Informe o local ou equipamento"></label>
+<label>Local da inspeção *
+  <input type="text" id="local" list="locais-recentes" placeholder="Informe o local ou equipamento" autocomplete="off">
+  <datalist id="locais-recentes"></datalist>
+</label>
 <label>Nome do técnico *<input type="text" id="tecnico" placeholder="Nome completo"></label>
-<div class="row-2"><label>Chapa *<input type="text" id="chapa"></label><label>CFT / CREA *<input type="text" id="cft-crea"></label></div>
+<label style="display:flex;align-items:center;gap:8px;margin-top:-4px;margin-bottom:12px">
+  <input type="checkbox" id="salvar-tecnico" checked style="width:auto;margin:0">
+  <span style="font-size:.82rem;color:#64748b">Lembrar meus dados para próximas inspeções</span>
+</label>
+<div class="row-2"><label>Chapa *<input type="text" id="chapa"></label><label>CFT / CREA (opcional)<input type="text" id="cft-crea"></label></div>
 <label>Data da inspeção *<input type="date" id="data"></label>
 </section>
 <section id="secoes-container"></section>
@@ -80,7 +92,7 @@ button{cursor:pointer}
 </main></div>
 <div id="modal-historico" class="modal-bg escondido"><div class="modal-box"><div class="modal-header"><h3>Histórico de inspeções</h3><button onclick="fecharHistorico()" style="background:none;border:0;font-size:1.6rem">&times;</button></div><input type="text" id="input-busca" class="search-box" placeholder="Buscar por local, número ou tipo..." oninput="filtrarHistorico()"><div id="lista-historico" class="lista-historico-scroll"></div><button class="btn-secundario" style="width:100%;margin-top:14px" onclick="fecharHistorico()">Fechar</button></div></div>
 <script>
-const versaoAtual="7.0";
+const versaoAtual="7.1";
 const FORMULARIOS_PADRAO={
 luminotecnico:{id:"luminotecnico",titulo:"Preventiva Luminotécnica",cor:"#d97706",secoes:[
 {id:"lum_total",titulo:"Quantitativo geral",itens:[{id:"q_total_geral",pergunta:"Quantidade total de lâmpadas instaladas no local",tipo:"numero",sem_critica:true}]},
@@ -101,10 +113,10 @@ inspecao_visual:{id:"inspecao_visual",titulo:"Preventiva — Inspeção Visual",
 {id:"i4",pergunta:"As botoeiras estão operacionais?",tipo:"sim_nao"},
 {id:"i5",pergunta:"Há botoeiras danificadas?",tipo:"sim_nao",ajuda:"Identifique a botoeira ou a posição com anormalidade."},
 {id:"i6",pergunta:"Há necessidade de limpeza das botoeiras?",tipo:"sim_nao"}]},
-{id:"iv3",titulo:"Painéis de Mensagens Variáveis (PMVs)",itens:[
-{id:"i7",pergunta:"Os PMVs apresentam imagem e comunicação normais?",tipo:"sim_nao"},
-{id:"i8",pergunta:"Há danos físicos nos PMVs?",tipo:"sim_nao"},
-{id:"i9",pergunta:"Há necessidade de limpeza dos PMVs?",tipo:"sim_nao"}]},
+{id:"iv3",titulo:"PMV",itens:[
+{id:"i7",pergunta:"Os PMV apresentam imagem e comunicação normais?",tipo:"sim_nao"},
+{id:"i8",pergunta:"Há danos físicos nos PMV?",tipo:"sim_nao"},
+{id:"i9",pergunta:"Há necessidade de limpeza dos PMV?",tipo:"sim_nao"}]},
 {id:"iv4",titulo:"Eletroímãs e controle de acesso",itens:[
 {id:"i10",pergunta:"O eletroímã realiza o acionamento e a liberação corretamente?",tipo:"sim_nao"},
 {id:"i11",pergunta:"O status do eletroímã está sendo reconhecido corretamente pelo HUB?",tipo:"sim_nao",ajuda:"Diferencie falha de acionamento de falha de comunicação/status."}]},
@@ -145,35 +157,110 @@ lubrificacao_reapertos:{id:"lubrificacao_reapertos",titulo:"Preventiva — Lubri
 {id:"r21",pergunta:"Quadro elétrico: inspeção visual das fixações e componentes está satisfatória?",tipo:"sim_nao"},
 {id:"r22",pergunta:"Foi realizado algum reaperto autorizado no quadro elétrico?",tipo:"sim_nao",ajuda:"Executar somente com procedimento, autorização e condições de segurança aplicáveis."}]}]}
 };
-let DADOS_FORMULARIOS=JSON.parse(localStorage.getItem("formularios_customizados")||"null");
-if(!DADOS_FORMULARIOS){DADOS_FORMULARIOS=JSON.parse(JSON.stringify(FORMULARIOS_PADRAO));localStorage.setItem("formularios_customizados",JSON.stringify(DADOS_FORMULARIOS));}
-else{
- // Migração conservadora: preserva os formulários customizados existentes e atualiza apenas a estrutura padrão na versão nova.
- Object.keys(FORMULARIOS_PADRAO).forEach(k=>{if(!DADOS_FORMULARIOS[k])DADOS_FORMULARIOS[k]=JSON.parse(JSON.stringify(FORMULARIOS_PADRAO[k]));});
- // Os novos textos e itens passam a ser o padrão da versão 7.0; cópias personalizadas permanecem disponíveis no armazenamento.
- if(localStorage.getItem("versao_formulario")!==versaoAtual){
-   try{localStorage.setItem("formularios_backup_antes_v7",JSON.stringify(DADOS_FORMULARIOS));}catch(e){}
-   Object.keys(FORMULARIOS_PADRAO).forEach(k=>{
-     const antigo=DADOS_FORMULARIOS[k];
-     if(antigo && antigo.secoes && antigo.secoes.some(s=>s.personalizado===true)) return;
-     DADOS_FORMULARIOS[k]=JSON.parse(JSON.stringify(FORMULARIOS_PADRAO[k]));
-   });
-   localStorage.setItem("formularios_customizados",JSON.stringify(DADOS_FORMULARIOS));
-   localStorage.setItem("versao_formulario",versaoAtual);
- }
+
+// MUDANÇA AQUI: Nova chave de armazenamento para forçar atualização limpando o bug antigo
+let DADOS_FORMULARIOS=JSON.parse(localStorage.getItem("formularios_customizados_v71")||"null");
+if(!DADOS_FORMULARIOS){
+  DADOS_FORMULARIOS=JSON.parse(JSON.stringify(FORMULARIOS_PADRAO));
+  localStorage.setItem("formularios_customizados_v71",JSON.stringify(DADOS_FORMULARIOS));
+} else {
+  Object.keys(FORMULARIOS_PADRAO).forEach(k=>{
+    if(!DADOS_FORMULARIOS[k]) DADOS_FORMULARIOS[k]=JSON.parse(JSON.stringify(FORMULARIOS_PADRAO[k]));
+  });
+  if(localStorage.getItem("versao_formulario_v71")!==versaoAtual){
+    try{localStorage.setItem("formularios_backup_antes_v71",JSON.stringify(DADOS_FORMULARIOS));}catch(e){}
+    Object.keys(FORMULARIOS_PADRAO).forEach(k=>{
+      const antigo=DADOS_FORMULARIOS[k];
+      if(antigo && antigo.secoes && antigo.secoes.some(s=>s.personalizado===true)) return;
+      DADOS_FORMULARIOS[k]=JSON.parse(JSON.stringify(FORMULARIOS_PADRAO[k]));
+    });
+    localStorage.setItem("formularios_customizados_v71",JSON.stringify(DADOS_FORMULARIOS));
+    localStorage.setItem("versao_formulario_v71",versaoAtual);
+  }
 }
+
 let FORMULARIO_ATUAL=null,RESPOSTAS={},MODELOS_LAMPADAS=[
 {id:"m1200",nome:"18W — 1200 mm",ativo:false},{id:"m600",nome:"9W — 600 mm",ativo:false},{id:"me27",nome:"E27 (rosca)",ativo:false}
 ];
 const $=id=>document.getElementById(id);
 function lerHistorico(){try{return JSON.parse(localStorage.getItem("historico")||"[]")}catch(e){return[]}}
+
 function iniciarFormulario(tipo){
  FORMULARIO_ATUAL=DADOS_FORMULARIOS[tipo]||FORMULARIOS_PADRAO[tipo];RESPOSTAS={};MODELOS_LAMPADAS.forEach(m=>m.ativo=false);
  $("tela-inicial").classList.add("escondido");$("tela-formulario").classList.remove("escondido");
  $("badge-tipo").textContent=FORMULARIO_ATUAL.titulo;$("badge-tipo").style.background=FORMULARIO_ATUAL.cor;
  $("data").value=new Date().toLocaleDateString("en-CA");["local","tecnico","chapa","cft-crea","pendencias","contramedidas"].forEach(id=>$(id).value="");
- $("status-final").value="Concluída sem pendências";montarSecoes();window.scrollTo(0,0);
+ $("status-final").value="Concluída sem pendências";
+ 
+ // Preenchimento automático do técnico
+ const tecSalvo = JSON.parse(localStorage.getItem("tecnico_padrao") || "null");
+ if (tecSalvo) {
+   $("tecnico").value = tecSalvo.tecnico || "";
+   $("chapa").value   = tecSalvo.chapa   || "";
+   $("cft-crea").value = tecSalvo.cftCrea || "";
+ }
+ 
+ montarSecoes();
+ popularLocaisRecentes();
+ window.scrollTo(0,0);
 }
+
+function popularLocaisRecentes() {
+  const hist = lerHistorico();
+  const vistos = new Set();
+  const opts = hist
+    .filter(r => r.tipo === FORMULARIO_ATUAL.id && r.cabecalho?.local)
+    .map(r => r.cabecalho.local)
+    .filter(l => { const n = normalizar(l); if (vistos.has(n)) return false; vistos.add(n); return true; })
+    .slice(0, 15);
+  $("locais-recentes").innerHTML = opts.map(l => `<option value="${escapar(l)}">`).join("");
+}
+
+$("local")?.addEventListener("change", () => {
+  const localAtual = normalizar($("local").value);
+  if (!localAtual) return;
+  const anterior = lerHistorico().find(r =>
+    r.tipo === FORMULARIO_ATUAL.id &&
+    normalizar(r.cabecalho?.local) === localAtual
+  );
+  if (!anterior) return;
+  if (!confirm(`Encontrei uma inspeção anterior deste local (${anterior.numero}, em ${formatarData(anterior.cabecalho.data)}).\n\nDeseja carregar as respostas anteriores como ponto de partida?`)) return;
+  restaurarDoRelatorio(anterior);
+});
+
+function restaurarDoRelatorio(rel) {
+  RESPOSTAS = {};
+  FORMULARIO_ATUAL.secoes.forEach(sec => {
+    (sec.itens || []).forEach(it => {
+      const r = rel.respostas?.[it.id];
+      if (!r) return;
+      RESPOSTAS[it.id] = {
+        resposta: r.resposta,
+        valor: r.valor,
+        criticidade: r.criticidade,
+        observacao: r.observacao || ""
+      };
+    });
+  });
+
+  (rel.modelos_lampadas || []).forEach(m => {
+    let alvo = MODELOS_LAMPADAS.find(x => normalizar(x.nome) === normalizar(m.nome));
+    if (!alvo) { alvo = { id: "m_" + Date.now() + "_" + Math.random().toString(36).slice(2,6), nome: m.nome, ativo: true }; MODELOS_LAMPADAS.push(alvo); }
+    alvo.ativo = true;
+    RESPOSTAS[`qtde_${alvo.id}`]   = { valor: m.quantidade };
+    RESPOSTAS[`queim_${alvo.id}`]  = { valor: m.queimadas };
+    RESPOSTAS[`defeito_${alvo.id}`]= { valor: m.defeito };
+  });
+
+  $("status-final").value = rel.statusFinal || "Concluída sem pendências";
+  $("pendencias").value    = rel.pendencias || "";
+  $("contramedidas").value = rel.contramedidas || "";
+
+  montarSecoes();
+  window.scrollTo(0, 0);
+  alert("Respostas da inspeção anterior carregadas. Revise e ajuste o que mudou.");
+}
+
 function voltarInicio(){if(confirm("Deseja sair? Os dados ainda não salvos serão perdidos.")){$("tela-formulario").classList.add("escondido");$("tela-inicial").classList.remove("escondido");}}
 function salvarResp(id,valor){RESPOSTAS[id]={...(RESPOSTAS[id]||{}),valor};}
 function salvarCrit(id,crit,btn){btn.parentElement.querySelectorAll("button").forEach(b=>b.classList.remove("ativo"));btn.classList.add("ativo");RESPOSTAS[id]={...(RESPOSTAS[id]||{}),criticidade:crit};}
@@ -191,7 +278,7 @@ function renderizarModelosLampadas(container){
   head.innerHTML=`<input type="checkbox" ${m.ativo?"checked":""}><span>${escapar(m.nome)}</span>`;
   const body=document.createElement("div");body.className="modelo-body "+(m.ativo?"ativo":"");
   const q=RESPOSTAS[`qtde_${m.id}`]?.valor??"",b=RESPOSTAS[`queim_${m.id}`]?.valor??"",d=RESPOSTAS[`defeito_${m.id}`]?.valor??"";
-  body.innerHTML=`<div class="grid-3"><label>Instaladas<input type="number" min="0" step="1" value="${q}" placeholder="0" data-campo="qtde"></label><label>Queimadas<input type="number" min="0" step="1" value="${b}" placeholder="0" data-campo="queim"></label><label>Com defeito<input type="number" min="0" step="1" value="${d}" placeholder="0" data-campo="defeito"></label></div><div class="status-auto" aria-live="polite"></div><p class="item-ajuda">Criticidade automática: queimada = alta; com defeito = baixa; sem ocorrência = operando.</p>`;
+  body.innerHTML=`<div class="grid-3"><label>Instaladas<input type="number" inputmode="numeric" min="0" step="1" value="${q}" placeholder="0" data-campo="qtde"></label><label>Queimadas<input type="number" inputmode="numeric" min="0" step="1" value="${b}" placeholder="0" data-campo="queim"></label><label>Com defeito<input type="number" inputmode="numeric" min="0" step="1" value="${d}" placeholder="0" data-campo="defeito"></label></div><div class="status-auto" aria-live="polite"></div><p class="item-ajuda">Criticidade automática: queimada = alta; com defeito = baixa; sem ocorrência = normal.</p>`;
   const inputs=body.querySelectorAll("input");inputs.forEach(inp=>{inp.addEventListener("input",()=>{const key=inp.dataset.campo;const val=inp.value;if(val!==""&&Number(val)<0){inp.value=0;}salvarResp(`${key}_${m.id}`,inp.value);atualizarStatusModelo(m,body);});});
   head.querySelector("input").addEventListener("change",e=>{m.ativo=e.target.checked;head.classList.toggle("ativo",m.ativo);body.classList.toggle("ativo",m.ativo);if(!m.ativo){["qtde","queim","defeito"].forEach(k=>delete RESPOSTAS[`${k}_${m.id}`]);}});
   box.append(head,body);container.append(box);atualizarStatusModelo(m,body);
@@ -201,7 +288,7 @@ function renderizarModelosLampadas(container){
 function atualizarStatusModelo(m,body){
  const q=RESPOSTAS[`qtde_${m.id}`]?.valor||0,b=RESPOSTAS[`queim_${m.id}`]?.valor||0,d=RESPOSTAS[`defeito_${m.id}`]?.valor||0,area=body.querySelector(".status-auto");
  const critQ=Number(b)>0,critD=Number(d)>0;
- area.innerHTML=`<span class="status-chip ${critQ?"chip-alta":"chip-ok"}">Queimadas: ${critQ?"ALTA":"OPERANDO"}</span><span class="status-chip ${critD?"chip-baixa":"chip-ok"}">Defeitos: ${critD?"BAIXA":"OPERANDO"}</span>`;
+ area.innerHTML=`<span class="status-chip ${critQ?"chip-alta":"chip-ok"}">Queimadas: ${critQ?"ALTA":"NORMAL"}</span><span class="status-chip ${critD?"chip-baixa":"chip-ok"}">Defeitos: ${critD?"BAIXA":"NORMAL"}</span>`;
 }
 function montarSecoes(){
  const container=$("secoes-container");container.innerHTML="";
@@ -212,13 +299,13 @@ function montarSecoes(){
    const div=document.createElement("div");div.className="item";const p=document.createElement("div");p.className="item-pergunta";p.textContent=item.pergunta;div.append(p);
    if(item.ajuda){const a=document.createElement("div");a.className="item-ajuda";a.textContent=item.ajuda;div.append(a);}
    const r=RESPOSTAS[item.id]||{};
-   if(item.tipo==="numero"){const input=document.createElement("input");input.type="number";input.min="0";input.step="1";input.placeholder="Informe a quantidade";input.value=r.valor??"";input.addEventListener("input",e=>{if(Number(e.target.value)<0)e.target.value=0;salvarResp(item.id,e.target.value);});div.append(input);}
+   if(item.tipo==="numero"){const input=document.createElement("input");input.type="number";input.inputMode="numeric";input.min="0";input.step="1";input.placeholder="Informe a quantidade";input.value=r.valor??"";input.addEventListener("input",e=>{if(Number(e.target.value)<0)e.target.value=0;salvarResp(item.id,e.target.value);});div.append(input);}
    else{
     const ops=document.createElement("div");ops.className="opcoes-resposta";
-    ["Sim","Não"].forEach(op=>{const b=document.createElement("button");b.type="button";b.textContent=op;if(r.resposta===op)b.classList.add(op==="Sim"?"ativo-sim":"ativo-nao");b.onclick=()=>{ops.querySelectorAll("button").forEach(x=>x.classList.remove("ativo-sim","ativo-nao"));b.classList.add(op==="Sim"?"ativo-sim":"ativo-nao");RESPOSTAS[item.id]={...(RESPOSTAS[item.id]||{}),resposta:op};};ops.append(b);});div.append(ops);
+    ["Sim","Não","N/A"].forEach(op=>{const b=document.createElement("button");b.type="button";b.textContent=op;if(r.resposta===op)b.classList.add(op==="Sim"?"ativo-sim":op==="Não"?"ativo-nao":"ativo-na");b.onclick=()=>{ops.querySelectorAll("button").forEach(x=>x.classList.remove("ativo-sim","ativo-nao","ativo-na"));b.classList.add(op==="Sim"?"ativo-sim":op==="Não"?"ativo-nao":"ativo-na");RESPOSTAS[item.id]={...(RESPOSTAS[item.id]||{}),resposta:op};};ops.append(b);});div.append(ops);
    }
    if(!item.sem_critica){const label=document.createElement("div");label.className="criticidade-label";label.textContent="Criticidade avaliada pelo técnico *";div.append(label);const cr=document.createElement("div");cr.className="criticidades";
-    [["alta","🔴 Alta"],["baixa","🟡 Baixa"],["operando","🔵 Operando"]].forEach(([key,txt])=>{const b=document.createElement("button");b.type="button";b.dataset.crit=key;b.textContent=txt;if(r.criticidade===key)b.classList.add("ativo");b.onclick=()=>salvarCrit(item.id,key,b);cr.append(b);});div.append(cr);
+    [["alta","🔴 Alta"],["baixa","🟡 Baixa"],["operando","🔵 Normal"]].forEach(([key,txt])=>{const b=document.createElement("button");b.type="button";b.dataset.crit=key;b.textContent=txt;if(r.criticidade===key)b.classList.add("ativo");b.onclick=()=>salvarCrit(item.id,key,b);cr.append(b);});div.append(cr);
    }
    const obs=document.createElement("textarea");obs.placeholder="Observações: identifique o equipamento, localização, sintoma ou código de falha quando aplicável.";obs.value=r.observacao||"";obs.addEventListener("input",e=>{RESPOSTAS[item.id]={...(RESPOSTAS[item.id]||{}),observacao:e.target.value};});div.append(obs);
    const fotos=document.createElement("div");fotos.className="foto-area";
@@ -227,14 +314,15 @@ function montarSecoes(){
   });container.append(s);
  });
 }
-function adicionarPreview(area,id,b64,antes){const p=document.createElement("div");p.className="foto-preview";const img=document.createElement("img");img.src=b64;const btn=document.createElement("button");btn.type="button";btn.textContent="×";btn.onclick=()=>{const arr=RESPOSTAS[id]?.fotos||[];const i=arr.indexOf(b64);if(i>=0)arr.splice(i,1);p.remove();};p.append(img,btn);area.insertBefore(p,antes||area.lastChild);}
+function adicionarPreview(area,id,b64,antes){const p=document.createElement("div");p.className="foto-preview";const img=document.createElement("img");img.src=b64;const btn=document.createElement("button");btn.type="button";btn.textContent="×";btn.onclick=()=>{const arr=RESPOSTAS[id]?.fotos||[];const i=arr.lastIndexOf(b64);if(i>=0)arr.splice(i,1);p.remove();};p.append(img,btn);area.insertBefore(p,antes||area.lastChild);}
 function escapar(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function gerarNumeroRelatorio(){const ano=new Date().getFullYear(),chave=`contador_${ano}`;let n=parseInt(localStorage.getItem(chave)||"0",10)+1;localStorage.setItem(chave,String(n));return`PREV-${ano}-${String(n).padStart(4,"0")}`;}
+
 function validarFormulario(){
- const obrig=["local","tecnico","chapa","cft-crea","data"];for(const id of obrig){if(!$(id).value.trim()){alert("Preencha todos os campos obrigatórios da identificação.");$(id).focus();return false;}}
+ const obrig=["local","tecnico","chapa","data"];for(const id of obrig){if(!$(id).value.trim()){alert("Preencha todos os campos obrigatórios da identificação.");$(id).focus();return false;}}
  for(const s of FORMULARIO_ATUAL.secoes){if(s.tipo_especial==="modelos_lampadas"){
   for(const m of MODELOS_LAMPADAS.filter(x=>x.ativo)){const q=RESPOSTAS[`qtde_${m.id}`]?.valor,b=RESPOSTAS[`queim_${m.id}`]?.valor,d=RESPOSTAS[`defeito_${m.id}`]?.valor;if(q===""||q==null){alert(`Informe a quantidade instalada do modelo ${m.nome}.`);return false;}if([b,d].some(x=>x===""||x==null)){alert(`Informe as quantidades queimadas e com defeito do modelo ${m.nome}. Use zero quando não houver ocorrência.`);return false;}if(Number(b)+Number(d)>Number(q)){alert(`No modelo ${m.nome}, a soma de queimadas e defeituosas não pode superar a quantidade instalada.`);return false;}}
-  }else for(const it of s.itens){const r=RESPOSTAS[it.id]||{};if(it.tipo==="numero"&&r.valor!==undefined&&Number(r.valor)<0){alert("As quantidades não podem ser negativas.");return false;}if(it.tipo==="sim_nao"&&!r.resposta){alert(`Responda ao item: ${it.pergunta}`);return false;}if(!it.sem_critica&&!r.criticidade){alert(`Selecione a criticidade avaliada pelo técnico: ${it.pergunta}`);return false;}}
+  }else for(const it of s.itens){const r=RESPOSTAS[it.id]||{};if(it.tipo==="numero"&&r.valor!==undefined&&Number(r.valor)<0){alert("As quantidades não podem ser negativas.");return false;}if(it.tipo==="sim_nao"&&!r.resposta){alert(`Responda ao item: ${it.pergunta}`);return false;}if(!it.sem_critica && r.resposta !== "N/A" && !r.criticidade){alert(`Selecione a criticidade avaliada pelo técnico (ou marque N/A): ${it.pergunta}`);return false;}}
  }
  if(FORMULARIO_ATUAL.id==="luminotecnico"){
   const total=Number(RESPOSTAS.q_total_geral?.valor||0),soma=MODELOS_LAMPADAS.filter(m=>m.ativo).reduce((a,m)=>a+Number(RESPOSTAS[`qtde_${m.id}`]?.valor||0),0);
@@ -242,9 +330,19 @@ function validarFormulario(){
  }
  return true;
 }
+
 function finalizar(){
  if(!validarFormulario())return;
  if(!window.jspdf){alert("Não foi possível carregar a biblioteca de PDF. Verifique sua conexão e tente novamente.");return;}
+ 
+ if ($("salvar-tecnico").checked) {
+   localStorage.setItem("tecnico_padrao", JSON.stringify({
+     tecnico: $("tecnico").value.trim(),
+     chapa:   $("chapa").value.trim(),
+     cftCrea: $("cft-crea").value.trim()
+   }));
+ }
+
  const cabecalho={local:$("local").value.trim(),tecnico:$("tecnico").value.trim(),chapa:$("chapa").value.trim(),cftCrea:$("cft-crea").value.trim(),data:$("data").value};
  const modelos=MODELOS_LAMPADAS.filter(m=>m.ativo).map(m=>({id:m.id,nome:m.nome,quantidade:RESPOSTAS[`qtde_${m.id}`]?.valor||"0",queimadas:RESPOSTAS[`queim_${m.id}`]?.valor||"0",defeito:RESPOSTAS[`defeito_${m.id}`]?.valor||"0",critQueimadas:criticidadeAutomatica(RESPOSTAS[`queim_${m.id}`]?.valor,0),critDefeito:criticidadeAutomatica(0,RESPOSTAS[`defeito_${m.id}`]?.valor)}));
  const rel={numero:gerarNumeroRelatorio(),tipo:FORMULARIO_ATUAL.id,titulo:FORMULARIO_ATUAL.titulo,cabecalho,secoes:JSON.parse(JSON.stringify(FORMULARIO_ATUAL.secoes)),respostas:JSON.parse(JSON.stringify(RESPOSTAS)),modelos_lampadas:modelos,statusFinal:$("status-final").value,pendencias:$("pendencias").value.trim(),contramedidas:$("contramedidas").value.trim(),geradoEm:new Date().toISOString()};
@@ -270,7 +368,6 @@ function mapaItens(rel){
 function construirComparativo(atual,anteriores){
  const agora=mapaItens(atual),melhorou=[],piorou=[],permanece=[],novos=[];
  if(!anteriores.length)return{quantidade:0,anteriores:[],melhorou,piorou,permanece,novos};
- // Compara com a inspeção mais recente; o quadro de referência lista até as três anteriores.
  const anterior=mapaItens(anteriores[0]);
  Object.keys(agora).forEach(k=>{
   const a=agora[k],p=anterior[k];if(!p)return;
@@ -284,12 +381,12 @@ function construirComparativo(atual,anteriores){
 }
 function resumoEstado(x){return `${x.resposta!==""?x.resposta:"Sem resposta"}${x.criticidade?` / ${x.criticidade.toUpperCase()}`:""}`;}
 function formatarData(d){if(!d)return"—";const p=String(d).split("-");return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d;}
-/* pdf-relatorio.js — PDF profissional. Substitui gerarPDF() e corrige itemEstaComProblema(). */
+
 const PDF_CORES={luminotecnico:[217,119,6],inspecao_visual:[37,99,235],lubrificacao_reapertos:[5,150,105]};
 const PDF_ST={
  alta:{nome:"ALTA",emoji:"🔴",cor:[220,38,38],fundo:[254,226,226],texto:[153,27,27]},
  baixa:{nome:"BAIXA",emoji:"🟡",cor:[217,119,6],fundo:[254,243,199],texto:[146,64,14]},
- operando:{nome:"OPERANDO",emoji:"🔵",cor:[37,99,235],fundo:[219,234,254],texto:[30,64,175]}
+ operando:{nome:"NORMAL",emoji:"🔵",cor:[37,99,235],fundo:[219,234,254],texto:[30,64,175]}
 };
 const _emojiCache={};
 function emojiPNG(ch){
@@ -308,9 +405,9 @@ function desenharEmoji(doc,ch,x,y,s){
  const cor={"🔴":[220,38,38],"🟡":[217,119,6],"🔵":[37,99,235],"✅":[5,150,105]}[ch]||[217,119,6];
  doc.setFillColor(...cor);doc.circle(x+s/2,y+s/2,s/2.3,"F");
 }
-/* Corrigida: a regex antiga usava \\b e nunca reconhecia "Há...", "Existe...", etc. */
 function itemEstaComProblema(x){
  if(!x)return false;
+ if(x.resposta === "N/A") return false;
  if(x.tipo==="quantidade")return Number(x.resposta)>0;
  const q=normalizar(x.pergunta);
  if(x.tipo==="numero")return /queimad|defeit|inoperant|falha|avaria|danificad|pendencia/.test(q)&&Number(x.resposta)>0;
@@ -321,6 +418,7 @@ function itemEstaComProblema(x){
  return x.criticidade==="alta"||x.criticidade==="baixa";
 }
 function statusItemPDF(it,r){
+ if(r.resposta === "N/A") return null;
  if(r.criticidade)return r.criticidade;
  const q=normalizar(it.pergunta);
  if(it.tipo==="numero"){
@@ -368,7 +466,7 @@ function gerarPDF(rel){
  (rel.secoes||[]).forEach(s=>(s.itens||[]).forEach(it=>{const st=statusItemPDF(it,rel.respostas?.[it.id]||{});if(st)cont[st]++;}));
  (rel.modelos_lampadas||[]).forEach(m=>{cont[Number(m.queimadas)>0?"alta":"operando"]++;cont[Number(m.defeito)>0?"baixa":"operando"]++;});
  const cw=(W-8)/3;
- [["alta","ITENS EM ALTA"],["baixa","ITENS EM BAIXA"],["operando","ITENS OPERANDO"]].forEach(([k,rot],i)=>{
+ [["alta","ITENS EM ALTA"],["baixa","ITENS EM BAIXA"],["operando","ITENS NORMAIS"]].forEach(([k,rot],i)=>{
   const S=PDF_ST[k],x=M+i*(cw+4);
   doc.setFillColor(...S.fundo);doc.roundedRect(x,y,cw,18,2,2,"F");
   desenharEmoji(doc,S.emoji,x+4,y+5,8);
@@ -482,13 +580,13 @@ function gerarPDF(rel){
 
  /* Assinatura */
  ensure(40);y+=12;doc.setDrawColor(100,116,139);doc.line(M,y,M+88,y);doc.line(M+W-55,y,M+W,y);
- fonte(true,9);doc.text(c.tecnico,M,y+5);fonte(false,8,MUTED);doc.text(`Chapa ${c.chapa}  |  CFT/CREA ${c.cftCrea}`,M,y+9.5);
+ fonte(true,9);doc.text(c.tecnico,M,y+5);fonte(false,8,MUTED);doc.text(`Chapa ${c.chapa}  |  CFT/CREA ${c.cftCrea||"—"}`,M,y+9.5);
  fonte(true,9);doc.text(formatarData(c.data),M+W-27.5,y+5,{align:"center"});fonte(false,8,MUTED);doc.text("Data da inspeção",M+W-27.5,y+9.5,{align:"center"});
  y+=18;
 
  /* Legenda */
  ensure(18);doc.setFillColor(248,250,252);doc.roundedRect(M,y,W,14,2,2,"F");fonte(true,7.3,INK);doc.text("LEGENDA DE CRITICIDADE",M+4,y+4.6);
- [["alta","ALTA — crítica / inoperante"],["baixa","BAIXA — anomalia / defeito leve"],["operando","OPERANDO — condição normal"]].forEach(([k,t],i)=>{
+ [["alta","ALTA — crítica / inoperante"],["baixa","BAIXA — anomalia / defeito leve"],["operando","NORMAL — condição normal"]].forEach(([k,t],i)=>{
   const x=M+4+i*59;desenharEmoji(doc,PDF_ST[k].emoji,x,y+6.4,4);fonte(false,7.5,[70,70,70]);doc.text(t,x+5.5,y+9.6);
  });
 
