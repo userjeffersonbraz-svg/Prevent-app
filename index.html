@@ -27,13 +27,17 @@ button{cursor:pointer}
 .cabecalho h2,.secao h3{font-size:1rem;margin-bottom:13px;color:#334155;border-bottom:2px solid var(--line);padding-bottom:9px}
 .cabecalho label{display:block;font-size:.85rem;color:#374151;margin-bottom:12px}.cabecalho input{width:100%;padding:11px;margin-top:5px;border:1px solid #cbd5e1;border-radius:8px;font-size:1rem}
 .row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.item{border-bottom:1px solid #f1f5f9;padding:14px 0}.item:last-child{border:0}.item-pergunta{font-weight:650;font-size:.95rem;margin-bottom:10px}
+.item{border-bottom:1px solid #f1f5f9;padding:14px 0}.item:last-child{border:0}.item-pergunta{font-weight:650;font-size:.95rem;margin-bottom:10px; display:flex; gap:6px;}
+.item-numero { color: #64748b; font-weight: 800; }
 .item-ajuda{font-size:.8rem;color:var(--muted);margin:-5px 0 10px}
 .opcoes-resposta{display:flex;gap:8px;margin-bottom:10px}.opcoes-resposta button{flex:1;padding:10px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;font-weight:650}
 .opcoes-resposta button.ativo-sim{background:#059669;color:#fff;border-color:#059669}
 .opcoes-resposta button.ativo-nao{background:#475569;color:#fff;border-color:#475569}
 .opcoes-resposta button.ativo-na{background:#94a3b8;color:#fff;border-color:#94a3b8}
-.item input[type=number],.item textarea,.item select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:.94rem;margin:0 0 10px;font-family:inherit}
+.item input[type=number],.item textarea,.item select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:.94rem;margin:0 0 10px;font-family:inherit;transition:background .2s, border-color .2s;}
+.item input[type=number].input-auto-alta{border-color:#dc2626;background:#fee2e2;color:#991b1b;font-weight:bold;}
+.item input[type=number].input-auto-baixa{border-color:#d97706;background:#fef3c7;color:#92400e;font-weight:bold;}
+.item input[type=number].input-auto-ok{border-color:#2563eb;background:#dbeafe;color:#1e40af;font-weight:bold;}
 .item textarea{min-height:62px;resize:vertical}.criticidade-label{font-size:.8rem;color:var(--muted);margin:3px 0 6px}
 .criticidades{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
 .criticidades button{padding:10px 4px;border-radius:8px;border:2px solid var(--line);background:#fff;font-size:.82rem;font-weight:700}
@@ -92,15 +96,15 @@ button{cursor:pointer}
 </main></div>
 <div id="modal-historico" class="modal-bg escondido"><div class="modal-box"><div class="modal-header"><h3>Histórico de inspeções</h3><button onclick="fecharHistorico()" style="background:none;border:0;font-size:1.6rem">&times;</button></div><input type="text" id="input-busca" class="search-box" placeholder="Buscar por local, número ou tipo..." oninput="filtrarHistorico()"><div id="lista-historico" class="lista-historico-scroll"></div><button class="btn-secundario" style="width:100%;margin-top:14px" onclick="fecharHistorico()">Fechar</button></div></div>
 <script>
-const versaoAtual="7.1";
+const versaoAtual="7.2";
 const FORMULARIOS_PADRAO={
 luminotecnico:{id:"luminotecnico",titulo:"Preventiva Luminotécnica",cor:"#d97706",secoes:[
 {id:"lum_total",titulo:"Quantitativo geral",itens:[{id:"q_total_geral",pergunta:"Quantidade total de lâmpadas instaladas no local",tipo:"numero",sem_critica:true}]},
 {id:"lum_modelos",titulo:"Levantamento por modelo de lâmpada",tipo_especial:"modelos_lampadas",itens:[]},
 {id:"lum_emergencia",titulo:"Iluminação de emergência",itens:[
 {id:"l4",pergunta:"Quantidade total de luminárias de emergência",tipo:"numero",sem_critica:true},
-{id:"l5",pergunta:"Quantidade de luminárias de emergência queimadas",tipo:"numero",sem_critica:true},
-{id:"l6",pergunta:"Quantidade de luminárias de emergência com defeito",tipo:"numero",sem_critica:true},
+{id:"l5",pergunta:"Quantidade de luminárias de emergência queimadas",tipo:"numero",sem_critica:true, auto_crit: "alta"},
+{id:"l6",pergunta:"Quantidade de luminárias de emergência com defeito",tipo:"numero",sem_critica:true, auto_crit: "baixa"},
 {id:"l7",pergunta:"Foi necessária alguma intervenção ou contramedida?",tipo:"sim_nao",sem_critica:true},
 {id:"l8",pergunta:"As luminárias de emergência permanecem operacionais após os testes?",tipo:"sim_nao",sem_critica:true}
 ]}]},
@@ -158,24 +162,24 @@ lubrificacao_reapertos:{id:"lubrificacao_reapertos",titulo:"Preventiva — Lubri
 {id:"r22",pergunta:"Foi realizado algum reaperto autorizado no quadro elétrico?",tipo:"sim_nao",ajuda:"Executar somente com procedimento, autorização e condições de segurança aplicáveis."}]}]}
 };
 
-// MUDANÇA AQUI: Nova chave de armazenamento para forçar atualização limpando o bug antigo
-let DADOS_FORMULARIOS=JSON.parse(localStorage.getItem("formularios_customizados_v71")||"null");
+// Nova chave de armazenamento para forçar atualização
+let DADOS_FORMULARIOS=JSON.parse(localStorage.getItem("formularios_customizados_v72")||"null");
 if(!DADOS_FORMULARIOS){
   DADOS_FORMULARIOS=JSON.parse(JSON.stringify(FORMULARIOS_PADRAO));
-  localStorage.setItem("formularios_customizados_v71",JSON.stringify(DADOS_FORMULARIOS));
+  localStorage.setItem("formularios_customizados_v72",JSON.stringify(DADOS_FORMULARIOS));
 } else {
   Object.keys(FORMULARIOS_PADRAO).forEach(k=>{
     if(!DADOS_FORMULARIOS[k]) DADOS_FORMULARIOS[k]=JSON.parse(JSON.stringify(FORMULARIOS_PADRAO[k]));
   });
-  if(localStorage.getItem("versao_formulario_v71")!==versaoAtual){
-    try{localStorage.setItem("formularios_backup_antes_v71",JSON.stringify(DADOS_FORMULARIOS));}catch(e){}
+  if(localStorage.getItem("versao_formulario_v72")!==versaoAtual){
+    try{localStorage.setItem("formularios_backup_antes_v72",JSON.stringify(DADOS_FORMULARIOS));}catch(e){}
     Object.keys(FORMULARIOS_PADRAO).forEach(k=>{
       const antigo=DADOS_FORMULARIOS[k];
       if(antigo && antigo.secoes && antigo.secoes.some(s=>s.personalizado===true)) return;
       DADOS_FORMULARIOS[k]=JSON.parse(JSON.stringify(FORMULARIOS_PADRAO[k]));
     });
-    localStorage.setItem("formularios_customizados_v71",JSON.stringify(DADOS_FORMULARIOS));
-    localStorage.setItem("versao_formulario_v71",versaoAtual);
+    localStorage.setItem("formularios_customizados_v72",JSON.stringify(DADOS_FORMULARIOS));
+    localStorage.setItem("versao_formulario_v72",versaoAtual);
   }
 }
 
@@ -290,23 +294,68 @@ function atualizarStatusModelo(m,body){
  const critQ=Number(b)>0,critD=Number(d)>0;
  area.innerHTML=`<span class="status-chip ${critQ?"chip-alta":"chip-ok"}">Queimadas: ${critQ?"ALTA":"NORMAL"}</span><span class="status-chip ${critD?"chip-baixa":"chip-ok"}">Defeitos: ${critD?"BAIXA":"NORMAL"}</span>`;
 }
+
 function montarSecoes(){
  const container=$("secoes-container");container.innerHTML="";
+ let contadorGlobal = 1; // Variável para numerar as perguntas
+
  FORMULARIO_ATUAL.secoes.forEach(secao=>{
   const s=document.createElement("section");s.className="secao";const h=document.createElement("h3");h.textContent=secao.titulo;s.append(h);
-  if(secao.tipo_especial==="modelos_lampadas"){const wrap=document.createElement("div");s.append(wrap);renderizarModelosLampadas(wrap);container.append(s);return;}
+  
+  if(secao.tipo_especial==="modelos_lampadas"){
+    const wrap=document.createElement("div");s.append(wrap);renderizarModelosLampadas(wrap);container.append(s);return;
+  }
+  
   secao.itens.forEach(item=>{
-   const div=document.createElement("div");div.className="item";const p=document.createElement("div");p.className="item-pergunta";p.textContent=item.pergunta;div.append(p);
+   const div=document.createElement("div");div.className="item";
+   const p=document.createElement("div");p.className="item-pergunta";
+   
+   // Adiciona a numeração na pergunta
+   p.innerHTML = `<span class="item-numero">${contadorGlobal}.</span> <span>${escapar(item.pergunta)}</span>`;
+   contadorGlobal++;
+   
+   div.append(p);
    if(item.ajuda){const a=document.createElement("div");a.className="item-ajuda";a.textContent=item.ajuda;div.append(a);}
    const r=RESPOSTAS[item.id]||{};
-   if(item.tipo==="numero"){const input=document.createElement("input");input.type="number";input.inputMode="numeric";input.min="0";input.step="1";input.placeholder="Informe a quantidade";input.value=r.valor??"";input.addEventListener("input",e=>{if(Number(e.target.value)<0)e.target.value=0;salvarResp(item.id,e.target.value);});div.append(input);}
+   
+   if(item.tipo==="numero"){
+     const input=document.createElement("input");input.type="number";input.inputMode="numeric";input.min="0";input.step="1";input.placeholder="Informe a quantidade";input.value=r.valor??"";
+     
+     // Lógica de cor automática para itens com auto_crit definido
+     const aplicarCorAuto = () => {
+       if (!item.auto_crit) return;
+       const val = Number(input.value || 0);
+       input.classList.remove("input-auto-alta", "input-auto-baixa", "input-auto-ok");
+       if (val > 0) {
+         input.classList.add(item.auto_crit === "alta" ? "input-auto-alta" : "input-auto-baixa");
+       } else if (input.value !== "") {
+         input.classList.add("input-auto-ok");
+       }
+     };
+     
+     if (item.auto_crit) aplicarCorAuto();
+     
+     input.addEventListener("input",e=>{
+       if(Number(e.target.value)<0) e.target.value=0;
+       salvarResp(item.id,e.target.value);
+       aplicarCorAuto();
+     });
+     div.append(input);
+   }
    else{
     const ops=document.createElement("div");ops.className="opcoes-resposta";
     ["Sim","Não","N/A"].forEach(op=>{const b=document.createElement("button");b.type="button";b.textContent=op;if(r.resposta===op)b.classList.add(op==="Sim"?"ativo-sim":op==="Não"?"ativo-nao":"ativo-na");b.onclick=()=>{ops.querySelectorAll("button").forEach(x=>x.classList.remove("ativo-sim","ativo-nao","ativo-na"));b.classList.add(op==="Sim"?"ativo-sim":op==="Não"?"ativo-nao":"ativo-na");RESPOSTAS[item.id]={...(RESPOSTAS[item.id]||{}),resposta:op};};ops.append(b);});div.append(ops);
    }
-   if(!item.sem_critica){const label=document.createElement("div");label.className="criticidade-label";label.textContent="Criticidade avaliada pelo técnico *";div.append(label);const cr=document.createElement("div");cr.className="criticidades";
-    [["alta","🔴 Alta"],["baixa","🟡 Baixa"],["operando","🔵 Normal"]].forEach(([key,txt])=>{const b=document.createElement("button");b.type="button";b.dataset.crit=key;b.textContent=txt;if(r.criticidade===key)b.classList.add("ativo");b.onclick=()=>salvarCrit(item.id,key,b);cr.append(b);});div.append(cr);
+   
+   if(!item.sem_critica){
+     const label=document.createElement("div");label.className="criticidade-label";label.textContent="Criticidade avaliada pelo técnico *";div.append(label);
+     const cr=document.createElement("div");cr.className="criticidades";
+     [["alta","🔴 Alta"],["baixa","🟡 Baixa"],["operando","🔵 Normal"]].forEach(([key,txt])=>{
+       const b=document.createElement("button");b.type="button";b.dataset.crit=key;b.textContent=txt;if(r.criticidade===key)b.classList.add("ativo");b.onclick=()=>salvarCrit(item.id,key,b);cr.append(b);
+     });
+     div.append(cr);
    }
+   
    const obs=document.createElement("textarea");obs.placeholder="Observações: identifique o equipamento, localização, sintoma ou código de falha quando aplicável.";obs.value=r.observacao||"";obs.addEventListener("input",e=>{RESPOSTAS[item.id]={...(RESPOSTAS[item.id]||{}),observacao:e.target.value};});div.append(obs);
    const fotos=document.createElement("div");fotos.className="foto-area";
    (r.fotos||[]).forEach(f=>adicionarPreview(fotos,item.id,f));
@@ -489,10 +538,18 @@ function gerarPDF(rel){
   });
   y+=1;
  }
+ 
+ let contadorPDF = 1; // Numeração no PDF também
+ 
  function linhaItem(it){
   const r=rel.respostas?.[it.id]||{},st=statusItemPDF(it,r),S=st?PDF_ST[st]:null;
   const res=it.tipo==="numero"?String(r.valor??"—"):(r.resposta||"—");
-  fonte(false,9);const ql=linhas(it.pergunta,W-50);
+  
+  // Adiciona o número na pergunta do PDF
+  const textoPergunta = `${contadorPDF}. ${it.pergunta}`;
+  contadorPDF++;
+  
+  fonte(false,9);const ql=linhas(textoPergunta,W-50);
   const hq=Math.max(ql.length*4.3+4,r.criticidade?12.5:9);
   ensure(hq+2);
   if(st==="alta"||st==="baixa"){doc.setFillColor(...S.cor);doc.rect(M,y,1,hq-0.5,"F");}
@@ -510,6 +567,7 @@ function gerarPDF(rel){
   }
   if(r.fotos?.length)fotosGrid(r.fotos);
  }
+ 
  function tabelaModelos(){
   const ms=rel.modelos_lampadas||[],total=Number(rel.respostas?.q_total_geral?.valor||0);
   fonte(true,9,INK);doc.text(`Total geral informado no local: ${total} lâmpada(s)`,M+2,y+3);y+=7;
@@ -536,6 +594,7 @@ function gerarPDF(rel){
   else{desenharEmoji(doc,"✅",M+2,y,4);fonte(false,8.3,[6,95,70]);doc.text("Total geral confere com a soma dos modelos discriminados.",M+8,y+3.1);}
   y+=8;
  }
+ 
  (rel.secoes||[]).forEach(sec=>{
   titulo(sec.titulo);
   if(sec.tipo_especial==="modelos_lampadas")tabelaModelos();else(sec.itens||[]).forEach(linhaItem);
